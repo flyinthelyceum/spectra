@@ -7,7 +7,8 @@ Each stage has one number, and the stage is not finished until the number exists
 | 0 | Colour maths extracted from grow-lab; grow-lab consumes it | Both repos green on their own suites |
 | 1a | Head printed, AS7341 mounted, white LED only, dark/black/white cycle | Reads the ColorChecker. Gives the repeatability number. |
 | 1b | LED ring, sequential capture, per-LED integration time | 56 numbers per sample. Coarse reflectance curves. |
-| 1c | Storage, pigment index, masstone and drawdown protocol | A measured library of the tubes on hand |
+| 1c | The general store: sample ids, dated readings, calibration state, sample kinds | A library that takes any flat opaque sample |
+| 1c+ | The `paint` kind: pigment index, masstone and drawdown protocol | The tubes on hand, measured |
 | 1d | K/S extraction, mixture prediction, the six-pigment test | Predictions, scored. And the Stage 2 decision, made on data. |
 | 2 | C12880MA on the same plate, broadband source | The same library re-measured, against the same tiles |
 
@@ -25,7 +26,8 @@ software, which is why `pigment/km.py` exists before any of the hardware does.
 | 1a | A Color-aid tint ladder and a shade ladder, one hue family each | L\* monotone, hue angle steady along the ladder |
 | 1a | The Color-aid 19-step gray ladder | No compression at the dark end beyond the measured stray-light term |
 | 1b | A pigment with a known steep edge, measured twice a week apart | Curves overlay within the noise floor |
-| 1c | Every tube read masstone and drawdown, pigment index recorded | The library is complete, not partial |
+| 1c | Three sample kinds in the store, none of them special-cased in the core | A Color-aid swatch and a tube are the same kind of row |
+| 1c+ | Every tube read masstone and drawdown, pigment index recorded | The paint library is complete, not partial |
 | 1d | Six pigments, 50/50 predictions against actual mixes | Broad-curve pairs inside 3 ΔE00 |
 | 1d | The same test on the saturated organics | **No threshold. This number is the Stage 2 decision.** |
 | 2 | The library re-measured on the C12880MA, same tiles | The organics now inside 3 ΔE00 too |
@@ -47,9 +49,6 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
   first real scanner validation. One order unblocks both. The Color-aid 314 set is
   on the shelf and covers hue range, linearity and agreement, but carries no
   reference values, so it cannot stand in for the chart on accuracy.
-- **Color-aid size unrecorded.** Whether the set is 3"×4.5" or 6"×9" decides whether
-  the whole set can be scanned in about fifty flatbed passes or only a spanning
-  subset is viable. See `docs/COLOR_AID.md`.
 - **Publishing the 314-row table is undecided**, and the decision is cheaper before
   the table exists than after. Same file.
 - **`as7341_breakout` is unmeasured** in the components library: every row reads

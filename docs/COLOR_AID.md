@@ -1,16 +1,20 @@
 # Color-aid 314
 
-**In hand.** The full Color-aid set, 314 silkscreened papers, numbered 001–314 and
-identified on the reverse of every sheet except black and white.
+**In hand, 3"×4.5".** The full Color-aid set, 314 silkscreened papers, numbered
+001–314 and identified on the reverse of every sheet except black and white.
 
-They are not pigments and they never enter the pigment library. Paper cannot be
-mixed, a Color-aid sheet has no pigment index, and its K/S describes a screen ink on
-a substrate rather than anything that will ever come out of a tube. A Color-aid row
-in a table whose schema means "this is how it behaves in a mixture" would be a lie
-told in the schema rather than in a number.
+They are 314 first-class rows in the library, of kind `swatch`. Their second job,
+below, is as the instrument's characterisation target.
 
-What they are instead is the best characterisation target available here, and a
-better one than a ColorChecker for everything except absolute accuracy.
+They are not pigments and the Kubelka-Munk model never reads them. Paper cannot be
+mixed, a Color-aid sheet has no pigment index, and its K/S would describe a screen
+ink on a substrate rather than anything that will come out of a tube. That is a
+statement about which model applies, not about whether they belong: under
+`MEASUREMENT.md` a swatch and a tube are the same kind of reading, and the fields
+Kubelka-Munk needs are simply fields the `swatch` kind does not carry.
+
+They are also the best characterisation target available here, and a better one than
+a ColorChecker for everything except absolute accuracy.
 
 ## What is in the set
 
@@ -92,9 +96,9 @@ So use each for what it is good at:
 4. The flatbed's 314 then stands as a working catalogue the head never had to grind
    through, with a known relationship to the head.
 
-**Sizing decides whether this is an afternoon.** At 3"×4.5" roughly six papers plus
-the chart fit a V600 pass, so the set is about fifty scans. At 6"×9" it is one or two
-per pass and the full set stops being viable; scan a spanning subset instead.
+**Sizing: settled 2026-09-17, the set is 3"×4.5".** Roughly six papers plus the
+chart fit a V600 pass, so the full set is about fifty scans. Viable, and an
+afternoon rather than a project.
 
 ### Metameric pairs, free and real
 
@@ -121,7 +125,8 @@ turns a static asset into a series.
   paragraph exists.
 - **Not a replacement for the ColorChecker.** That order still gates the Stage 1a
   acceptance rows in `ROADMAP.md`, and grow-lab's first real scanner validation.
-- **Not library material.** See the top of this file.
+- **Not Kubelka-Munk input.** See the top of this file. They are library material;
+  they are not paint.
 - **Not a batch to run before the protocol is proven.** Twenty-four papers, one per
   hue, then decide whether the rest earns the handling.
 

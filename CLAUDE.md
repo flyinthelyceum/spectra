@@ -8,6 +8,14 @@ they carry rulings whose reasoning is not reconstructible from the code.
 
 ## The rules that are not obvious
 
+- **The measurement layer stays general.** A reading is a curve, a date, a
+  calibration state and an instrument config. What the sample is made of is an
+  optional field set chosen by its kind, never a column in the core. A field only
+  one material has, in the core table, is a bug — it is how this repo would quietly
+  become an oil-paint pipeline, which it was briefly written as and is not.
+  `docs/MEASUREMENT.md`.
+- **Kubelka-Munk is one model over the store, not the reason for it.** `km.py`
+  depends on nothing and knows nothing about pigments. Keep it that way.
 - **Saunderson before Kubelka-Munk, always.** Measured reflectance is not the
   internal reflectance the equations operate on. Skipping it biases K/S in a way
   that grows toward black, which is where the interesting pigments live. Any code
