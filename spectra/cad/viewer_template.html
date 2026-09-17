@@ -1,0 +1,693 @@
+<meta charset="utf-8">
+<title>Optical head — 45/0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* 3D Studio colour doctrine: WHITE #EEF1E6, BLACK #030506, YELLOW #FCC000
+     sparingly, BLUE #00326D for section markers, RED #C4091C for danger only.
+     The bench is painted black, so it reads completely differently on the two
+     grounds — check both before ruling anything from this page. */
+  :root {
+    --ground: #EEF1E6;
+    --panel: #F6F8F0;
+    --panel-edge: #CFD4C4;
+    --ink: #030506;
+    --muted: #6A6F63;
+    --accent: #FCC000;
+    --accent-ink: #7A5C00;
+    --marker: #00326D;
+    --danger: #C4091C;
+    --focus: #00326D;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0D0F11;
+      --panel: #16191C;
+      --panel-edge: #2A2E33;
+      --ink: #EEF1E6;
+      --muted: #8E938A;
+      --accent: #FCC000;
+      --accent-ink: #FCC000;
+      --marker: #6E9BD6;
+      --danger: #F0576A;
+      --focus: #6E9BD6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0D0F11;
+    --panel: #16191C;
+    --panel-edge: #2A2E33;
+    --ink: #EEF1E6;
+    --muted: #8E938A;
+    --accent: #FCC000;
+    --accent-ink: #FCC000;
+    --marker: #6E9BD6;
+    --danger: #F0576A;
+    --focus: #6E9BD6;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+  }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+
+  #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .datum-label {
+    position: absolute;
+    transform: translate(0, -100%);
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ground) 84%, transparent);
+    padding: 1px 4px;
+    border-left: 2px solid var(--accent);
+    white-space: nowrap;
+  }
+  .datum-label.danger { border-left-color: var(--danger); color: var(--danger); }
+
+  #rail {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 310px;
+    background: color-mix(in srgb, var(--panel) 94%, transparent);
+    border-right: 1px solid var(--panel-edge);
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  header { padding: 18px 18px 12px; border-bottom: 1px solid var(--panel-edge); }
+  header h1 {
+    margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.1;
+    text-wrap: balance;
+  }
+  header .meta {
+    margin-top: 6px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; color: var(--muted);
+  }
+  section { padding: 14px 18px; border-bottom: 1px solid var(--panel-edge); }
+  section:last-of-type { border-bottom: 0; }
+  h2 {
+    margin: 0 0 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); border-left: 3px solid var(--marker); padding-left: 7px;
+  }
+
+  .seg { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--panel-edge); border-radius: 3px; overflow: hidden; }
+  .seg button {
+    flex: 1 1 45%; padding: 7px 4px; border: 0; background: transparent; color: var(--ink);
+    font: inherit; font-size: 13px; cursor: pointer;
+    border-right: 1px solid var(--panel-edge); border-bottom: 1px solid var(--panel-edge);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #030506; font-weight: 600; }
+  .seg button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 1px;
+  }
+
+  .readout { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; column-gap: 12px; margin-top: 10px; }
+  .readout dt { color: var(--muted); }
+  .readout dd {
+    margin: 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; text-align: right;
+  }
+  .readout dd.key { font-weight: 500; }
+  .readout dd.danger { color: var(--danger); font-weight: 600; }
+
+  .views { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .views button {
+    padding: 7px 4px; border: 1px solid var(--panel-edge); border-radius: 3px; background: transparent; color: var(--ink);
+    font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .views button:hover { border-color: var(--accent); }
+  .views button.wide { grid-column: span 3; }
+  .views button.key { border-color: var(--accent); border-width: 2px; font-weight: 600; }
+
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row + .row { margin-top: 8px; }
+  label.check { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 3px 0; }
+  label.check input { margin: 0; accent-color: var(--accent); }
+  .swatch { width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(128,128,128,0.45); flex: none; }
+  .group-title { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 8px 0 2px; }
+  input[type="range"] { flex: 1; accent-color: var(--accent); }
+  select {
+    font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--panel-edge); border-radius: 3px;
+    background: var(--panel); color: var(--ink);
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 12px; min-width: 7ch; text-align: right; flex: none; }
+  .note { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .note b { color: var(--ink); font-weight: 600; }
+  #cut-axis { flex: none; width: 118px; }
+
+  #hint {
+    position: fixed; right: 14px; bottom: 12px; font-size: 12px; color: var(--muted);
+    background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 4px 8px; border-radius: 3px;
+  }
+  @media (max-width: 720px) {
+    #rail { top: auto; height: 52vh; width: 100%; border-right: 0; border-top: 1px solid var(--panel-edge); }
+    #hint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div id="stage"></div>
+<div id="labels"></div>
+
+<aside id="rail">
+  <header>
+    <h1>Optical head — 45/0</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section>
+    <h2>Variants</h2>
+    <div class="seg" id="variants" role="group" aria-label="Variants"></div>
+    <dl class="readout" id="readout"></dl>
+  </section>
+
+  <section>
+    <h2>View</h2>
+    <div class="views">
+      <button data-view="front">Front</button>
+      <button data-view="side">Side</button>
+      <button data-view="plan">Plan</button>
+      <button data-view="iso">Iso</button>
+      <button data-view="back">Back</button>
+      <button data-view="optic">Optical axis</button>
+      <button data-view="sample" class="wide key">Sit at the sample — look up the port</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="check"><input type="checkbox" id="rays" checked> <span>Light paths <b>— the specular lobe is the red one</b></span></label>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="datums" checked> <span>Optical datums</span></label>
+    </div>
+    <div id="ray-key" style="margin-top:8px"></div>
+  </section>
+
+  <section>
+    <h2>Section cut</h2>
+    <div class="row">
+      <select id="cut-axis" aria-label="Section axis">
+        <option value="off">Off</option>
+        <option value="y">Side to side</option>
+        <option value="x">Front to back</option>
+        <option value="z">Horizontal</option>
+      </select>
+      <input type="range" id="cut" min="0" max="1000" value="500" aria-label="Section position" disabled>
+      <span class="mono" id="cut-val">—</span>
+    </div>
+    <div class="note">Cut <b>side to side</b> through the axis to read the
+    geometry: the illumination arrives at 45&deg;, the specular lobe leaves at
+    45&deg; on the far side, and the collection tube stands in the middle. The
+    question the cut answers is whether that red ray clears the tube, and by how
+    much.</div>
+  </section>
+
+  <section>
+    <h2>Parts</h2>
+    <div id="parts"></div>
+  </section>
+</aside>
+
+<div id="hint">drag to orbit · wheel to zoom · shift-drag to pan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const DATA = /*__SPECTRA_DATA__*/null;
+
+// ---------- data ----------
+function b64ToBuffer(s) {
+  const bin = atob(s);
+  const buf = new ArrayBuffer(bin.length);
+  const u8 = new Uint8Array(buf);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return buf;
+}
+
+// Everything on this page is millimetres. The bench is metric to its bones —
+// 96mm dog pitch, 20mm grid, 18mm stock, 900mm high — so nothing converts.
+const MM = v => (Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)) + 'mm';
+
+// ---------- theme-aware canvas colours ----------
+const dark = () => matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light'
+  || document.documentElement.dataset.theme === 'dark';
+function palette() {
+  return dark()
+    ? { bg: 0x0E1011, gridA: 0x2C3134, gridB: 0x1B1E20, floor: 0x141718 }
+    : { bg: 0xCCD0CD, gridA: 0xAFB5B1, gridB: 0xC3C8C4, floor: 0xD7DAD7 };
+}
+
+// ---------- scene ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.localClippingEnabled = true;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+// Near and far are in millimetres, so both are ~25x grow-lab's inch figures.
+const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 4000);
+camera.up.set(0, 0, 1);
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x6E7266, 0.9);
+scene.add(hemi);
+// A black-painted bench is read entirely by its highlights, so the key light is
+// stronger and lower than it would be for a pale piece, and the fill is real.
+const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+sun.position.set(-1500, -2400, 3000);
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.45);
+fill.position.set(2200, 1600, 900);
+scene.add(fill);
+
+// The ground is centred on the first variant's footprint. Every variant is the
+// same 1152 x 768 top — only the case, the fronts and the holes move — so this
+// is computed once rather than rebuilt per variant.
+const BB0 = DATA.variants[0].bbox;
+const GROUND = [(BB0.min[0] + BB0.max[0]) / 2, (BB0.min[1] + BB0.max[1]) / 2];
+
+let grid, floor;
+function buildGround() {
+  const p = palette();
+  if (grid) scene.remove(grid);
+  if (floor) scene.remove(floor);
+  grid = new THREE.GridHelper(2880, 30, p.gridA, p.gridB);   // 96mm squares: the dog pitch, on the floor
+  grid.rotation.x = Math.PI / 2;
+  grid.position.set(GROUND[0], GROUND[1], -1);
+  scene.add(grid);
+  floor = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.MeshStandardMaterial({ color: p.floor, roughness: 1 }));
+  floor.position.set(GROUND[0], GROUND[1], -3);
+  scene.add(floor);
+  renderer.setClearColor(p.bg);
+}
+buildGround();
+
+// ---------- parts ----------
+const bench = new THREE.Group();
+scene.add(bench);
+const clipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+let clipping = false;
+const visible = {};
+Object.keys(DATA.materials).forEach(k => visible[k] = true);
+let current = null;      // variant object
+let meshes = {};
+
+// The drawer fronts take the variant's accent; everything else is a constant in
+// viewer.py's MATERIALS. This is the only colour on the bench that moves.
+function partColour(spec) { return spec.accent ? current.accent : spec.colour; }
+
+function makeMaterial(spec) {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color(partColour(spec)),
+    roughness: 0.72, metalness: spec.metalness,
+    transparent: spec.opacity < 1, opacity: spec.opacity,
+    side: THREE.DoubleSide, clipShadows: true,
+  });
+}
+
+function loadVariant(v) {
+  Object.values(meshes).forEach(m => { bench.remove(m); m.geometry.dispose(); m.material.dispose(); });
+  meshes = {};
+  current = v;
+  // v.meshes maps a family to a key in the shared geometry pool: variants that
+  // differ only in paint point at the same buffers. See viewer.pool_geometry.
+  for (const [name, key] of Object.entries(v.meshes)) {
+    const spec = DATA.materials[name];
+    const md = DATA.geometry[key];
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(b64ToBuffer(md.positions)), 3));
+    geo.setIndex(new THREE.BufferAttribute(new Uint32Array(b64ToBuffer(md.indices)), 1));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, makeMaterial(spec));
+    mesh.renderOrder = spec.opacity < 1 ? 2 : 1;
+    mesh.visible = visible[name];
+    bench.add(mesh);
+    meshes[name] = mesh;
+  }
+  applyClipping();
+  buildDatums();
+  buildRays();
+  renderRayKey();
+  renderReadout();
+  // Only list the families this variant actually has, and repaint the accent
+  // swatch, which is the one that changes between variants.
+  document.querySelectorAll('#parts label[data-part]').forEach(l => {
+    l.hidden = !(l.dataset.part in v.meshes);
+    const spec = DATA.materials[l.dataset.part];
+    if (spec.accent) l.querySelector('.swatch').style.background = partColour(spec);
+  });
+  needs();
+}
+
+// ---------- datums ----------
+const labelsEl = document.getElementById('labels');
+let datumGroup = new THREE.Group();
+scene.add(datumGroup);
+let datumPoints = [];
+// A datum with no name here is not drawn. That is how a key gets added to the
+// payload without being committed to on the page.
+const DATUM_NAMES = {
+  lip_tip: 'compliant lip, uncrushed',
+  port_face: 'PORT FACE — the stop, and z=0',
+  floor_top: 'inside of the port face',
+  baffle_start: 'collection tube starts',
+  led_plane: 'LED emitter plane',
+  plate_face: 'detector plate',
+};
+// Nothing here is a conflict in the way the bench's clamp field was, so the
+// danger colour is not spent on a datum. It is spent on the specular ray, which
+// is the one thing in this build that must not reach the detector. If a
+// constraint fails, the failing check goes red in the readout instead.
+const DANGER = new Set();
+function conflicted() { return (current.failing || 0) > 0; }
+
+function buildDatums() {
+  scene.remove(datumGroup); datumGroup = new THREE.Group(); scene.add(datumGroup);
+  labelsEl.innerHTML = ''; datumPoints = [];
+  const bb = current.bbox;
+  const x0 = bb.min[0] - 90, x1 = bb.max[0] + 90, y = bb.min[1] - 90;
+  const ok = new THREE.LineDashedMaterial({ color: 0xFCC000, dashSize: 26, gapSize: 16 });
+  const bad = new THREE.LineDashedMaterial({ color: dark() ? 0xF0576A : 0xC4091C, dashSize: 26, gapSize: 16 });
+  for (const [key, z] of Object.entries(current.datums)) {
+    if (!(key in DATUM_NAMES)) continue;
+    const danger = conflicted() && DANGER.has(key);
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x0, y, z), new THREE.Vector3(x1, y, z)]);
+    const line = new THREE.Line(g, danger ? bad : ok);
+    line.computeLineDistances();
+    datumGroup.add(line);
+    const el = document.createElement('div');
+    el.className = 'datum-label' + (danger ? ' danger' : '');
+    el.textContent = DATUM_NAMES[key] + ' · ' + MM(z);
+    labelsEl.appendChild(el);
+    datumPoints.push({ p: new THREE.Vector3(x0, y, z), el });
+  }
+  datumGroup.visible = document.getElementById('datums').checked;
+  labelsEl.style.display = datumGroup.visible ? '' : 'none';
+}
+function placeLabels() {
+  if (!datumGroup.visible) return;
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const v = new THREE.Vector3();
+  const placed = [];
+  for (const d of datumPoints) {
+    v.copy(d.p).project(camera);
+    const onScreen = v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
+    d.el.style.display = onScreen ? '' : 'none';
+    if (onScreen) placed.push({ d, x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * H });
+  }
+  // Labels sit above their line; two lines closer than a label's height would
+  // overprint, so walk them apart from the bottom of the screen up.
+  placed.sort((a, b) => b.y - a.y);
+  const MIN = 15;
+  for (let i = 1; i < placed.length; i++) {
+    if (placed[i - 1].y - placed[i].y < MIN) placed[i].y = placed[i - 1].y - MIN;
+  }
+  for (const p of placed) {
+    p.d.el.style.left = p.x + 'px';
+    p.d.el.style.top = p.y + 'px';
+  }
+}
+
+// ---------- the light paths ----------
+// This is the one thing on the page that is not a port of the bench viewer, and
+// it is the reason the page exists. The solids alone cannot answer the question
+// OPTICAL_HEAD.md calls the most important mechanical decision in the build:
+// does the specular lobe leave at 45 degrees and MISS the collection tube?
+//
+// Every polyline here was computed in assembly.rays() from params. Nothing is
+// drawn by eye and nothing is illustrative — if the geometry changes, these
+// move with it, and if the geometry is wrong these show it wrong.
+const RAY_STYLE = {
+  incident:       { colour: 0xFCC000, dark: 0xFFD447, w: 2, label: 'illumination, 45\u00b0 in' },
+  specular:       { colour: 0xC4091C, dark: 0xF0576A, w: 3, label: 'SPECULAR LOBE — must miss the detector' },
+  collect_axis:   { colour: 0x00326D, dark: 0x6FA8E0, w: 2, label: 'collection axis, 0\u00b0' },
+  collect_edge:   { colour: 0x00326D, dark: 0x6FA8E0, w: 1, label: 'what the tube accepts' },
+  port_circle:    { colour: 0x2A2D30, dark: 0xBFC5C9, w: 2, label: 'port aperture' },
+  lit_spot:       { colour: 0xFCC000, dark: 0xFFD447, w: 2, label: 'lit spot (an ellipse: round beam at 45\u00b0)' },
+  collected_spot: { colour: 0x00326D, dark: 0x6FA8E0, w: 2, label: 'collected spot' },
+};
+
+let rayGroup = new THREE.Group();
+scene.add(rayGroup);
+
+function buildRays() {
+  scene.remove(rayGroup);
+  rayGroup = new THREE.Group();
+  scene.add(rayGroup);
+  const d = dark();
+  for (const r of (current.rays || [])) {
+    const st = RAY_STYLE[r.role];
+    if (!st) continue;            // a role with no style is not drawn, same rule as datums
+    const pts = r.points.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: d ? st.dark : st.colour, linewidth: st.w });
+    rayGroup.add(new THREE.Line(geo, mat));
+  }
+  rayGroup.visible = document.getElementById('rays').checked;
+}
+
+function renderRayKey() {
+  const el = document.getElementById('ray-key');
+  const d = dark();
+  const seen = new Set((current.rays || []).map(r => r.role));
+  el.innerHTML = [...seen].filter(k => RAY_STYLE[k]).map(k => {
+    const st = RAY_STYLE[k];
+    const hex = '#' + (d ? st.dark : st.colour).toString(16).padStart(6, '0');
+    return `<div class="check"><span class="swatch" style="background:${hex}"></span>` +
+           `<span>${st.label}</span></div>`;
+  }).join('');
+}
+
+// ---------- clipping ----------
+function applyClipping() {
+  const planes = clipping ? [clipPlane] : [];
+  Object.values(meshes).forEach(m => { m.material.clippingPlanes = planes; m.material.needsUpdate = true; });
+}
+const cutAxis = document.getElementById('cut-axis');
+const cut = document.getElementById('cut');
+const cutVal = document.getElementById('cut-val');
+function cutRange() {
+  const a = cutAxis.value, bb = current.bbox;
+  const i = a === 'x' ? 0 : a === 'y' ? 1 : 2;
+  return [bb.min[i] - 20, bb.max[i] + 20];
+}
+function updateCut() {
+  const a = cutAxis.value;
+  clipping = a !== 'off';
+  cut.disabled = !clipping;
+  if (clipping) {
+    const [lo, hi] = cutRange();
+    const pos = lo + (hi - lo) * (cut.value / 1000);
+    // Keep the half on the viewer's side: cut away what is beyond the plane.
+    const n = a === 'x' ? new THREE.Vector3(-1, 0, 0) : a === 'y' ? new THREE.Vector3(0, -1, 0) : new THREE.Vector3(0, 0, -1);
+    clipPlane.set(n, pos);
+    cutVal.textContent = MM(pos);
+  } else {
+    cutVal.textContent = '—';
+  }
+  applyClipping();
+  needs();
+}
+cutAxis.addEventListener('change', updateCut);
+cut.addEventListener('input', updateCut);
+
+// ---------- camera / orbit ----------
+const target = new THREE.Vector3(0, 0, 12);   // replaced by setView('iso') once a variant loads
+let sph = { r: 160, theta: -0.6, phi: 1.15 };     // theta about Z from -Y, phi from +Z
+
+function applyCamera() {
+  const x = target.x + sph.r * Math.sin(sph.phi) * Math.sin(sph.theta);
+  const y = target.y - sph.r * Math.sin(sph.phi) * Math.cos(sph.theta);
+  const z = target.z + sph.r * Math.cos(sph.phi);
+  camera.position.set(x, y, z);
+  camera.lookAt(target);
+  needs();
+}
+
+// Framing is derived from the model's own bounding box, never from constants,
+// so a bench of another size frames the same way. SPAN is the box diagonal:
+// one number that already knows about all three dimensions.
+const size = i => current.bbox.max[i] - current.bbox.min[i];
+const mid = i => (current.bbox.max[i] + current.bbox.min[i]) / 2;
+const CTR = () => [mid(0), mid(1), mid(2)];
+const SPAN = () => Math.hypot(size(0), size(1), size(2));
+const VIEWS = {
+  front: () => ({ target: CTR(), r: SPAN() * 1.25, theta: 0, phi: Math.PI / 2 }),
+  back: () => ({ target: CTR(), r: SPAN() * 1.25, theta: Math.PI, phi: Math.PI / 2 }),
+  side: () => ({ target: CTR(), r: SPAN() * 1.25, theta: Math.PI / 2, phi: Math.PI / 2 }),
+  plan: () => ({ target: CTR(), r: SPAN() * 1.15, theta: 0, phi: 0.0001 }),
+  iso: () => ({ target: CTR(), r: SPAN() * 1.3, theta: -0.6, phi: 1.15 }),
+  // theta = PI puts the camera on +Y looking toward -Y, which is the side the
+  // "side to side" section cut removes material from. Any other azimuth looks
+  // at the cut face edge-on and shows you the outside of a half-cylinder, which
+  // is a picture of nothing. The view and the cut are a pair.
+  optic: () => ({ target: [0, 0, current.datums.plate_face / 2], r: SPAN() * 0.85, theta: Math.PI, phi: Math.PI / 2 }),
+};
+// The two person-views place an eye rather than frame a box. STAND is the
+// approach; SEATED is the one that decides something — eye 260mm BELOW the work
+// surface, looking up at the underside of the front edge, which is the only way
+// to see whether the knee bay is a bay or a slot.
+const EYES = {
+  // Put the eye where the SAMPLE is and look up through the port. This is the
+  // equivalent of the bench's seated view: the one viewpoint that answers a
+  // question no catalogue of angles answers. From down here you see the port
+  // aperture, the eight LEDs ringing it at 45 degrees, and the collection tube
+  // looking back down at you — which is the entire instrument, from the only
+  // position that matters, the sample's.
+  // The eye sits just UNDER the port face — in the gap the compliant lip
+  // leaves — not down at the sample card, which would put the camera inside a
+  // solid disc and render a grey screen. Same trap the bench viewer documents
+  // for the seated figure's head: a camera placed at an object's centre sees
+  // that object and nothing else.
+  sample: () => ({ eye: [0, 0, -0.5],
+                   at: [0, 0, current.datums.plate_face] }),
+};
+function setView(name) {
+  if (name in EYES) {
+    const v = EYES[name]();
+    target.set(...v.at);
+    const d = new THREE.Vector3(...v.eye).sub(target);
+    sph.r = d.length();
+    sph.phi = Math.acos(d.z / sph.r);
+    sph.theta = Math.atan2(d.x, -d.y);
+    applyCamera();
+    return;
+  }
+  const v = VIEWS[name]();
+  target.set(...v.target);
+  sph = { r: v.r, theta: v.theta, phi: v.phi };
+  applyCamera();
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+
+let drag = null;
+renderer.domElement.addEventListener('pointerdown', e => {
+  drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button === 2 || e.button === 1 };
+  renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.pan) {
+    const scale = sph.r / stage.clientHeight * 1.6;
+    const right = new THREE.Vector3(); const up = new THREE.Vector3();
+    camera.matrix.extractBasis(right, up, new THREE.Vector3());
+    target.addScaledVector(right, -dx * scale).addScaledVector(up, dy * scale);
+  } else {
+    sph.theta -= dx * 0.006;
+    sph.phi = Math.min(Math.PI - 0.02, Math.max(0.02, sph.phi - dy * 0.006));
+  }
+  applyCamera();
+});
+renderer.domElement.addEventListener('pointerup', () => drag = null);
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+renderer.domElement.addEventListener('wheel', e => {
+  e.preventDefault();
+  sph.r = Math.min(1200, Math.max(8, sph.r * Math.exp(e.deltaY * 0.0012)));
+  applyCamera();
+}, { passive: false });
+
+// ---------- UI ----------
+const readout = document.getElementById('readout');
+function renderReadout() {
+  const v = current, o = v.optics;
+  const fit = o.lit_minor > o.port_d ? ['overfills', 'key'] : ['UNDERFILLS THE PORT', 'danger'];
+  const rows = [
+    ['Illumination', `${o.illum_angle}\u00b0 \u00d7 ${o.led_n} LEDs`, 'key'],
+    ['Port aperture', MM(o.port_d), ''],
+    ['Lit spot', `${MM(o.lit_major)} \u00d7 ${MM(o.lit_minor)} ellipse`, ''],
+    ['Beam vs port', fit[0], fit[1]],
+    ['Collected spot', MM(o.collected_spot_d), ''],
+    ['Tube accepts', `\u00b1${o.accept_angle.toFixed(1)}\u00b0`, ''],
+    ['Specular arrives at', `${o.illum_angle}\u00b0 — rejected by ${(o.illum_angle - o.accept_angle).toFixed(1)}\u00b0`, 'key'],
+  ];
+  if (o.plate_blocked && o.plate_blocked.length) {
+    rows.push(['Detector plate', `omitted — ${o.plate_blocked.join(', ')} not measured`, 'danger']);
+  }
+  readout.innerHTML = rows.map(([k, val, cls]) => `<dt>${k}</dt><dd class="${cls}">${val}</dd>`).join('')
+    + (v.checks || []).filter(c => !c.ok).map(c =>
+        `<dt>FAILS</dt><dd class="danger">${c.name} — ${c.detail}</dd>`).join('');
+}
+
+const variantsEl = document.getElementById('variants');
+DATA.variants.forEach((v, n) => {
+  const b = document.createElement('button');
+  b.textContent = v.label;
+  b.setAttribute('aria-pressed', String(n === 0));
+  b.addEventListener('click', () => {
+    variantsEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    b.setAttribute('aria-pressed', 'true');
+    loadVariant(v);
+    if (cutAxis.value !== 'off') updateCut();
+  });
+  variantsEl.appendChild(b);
+});
+
+const partsEl = document.getElementById('parts');
+for (const group of ['printed', 'reference']) {
+  const t = document.createElement('div'); t.className = 'group-title';
+  t.textContent = group === 'printed' ? 'Printed here — black PETG, port face down' : 'Reference — bought, or measured elsewhere';
+  partsEl.appendChild(t);
+  for (const [name, spec] of Object.entries(DATA.materials)) {
+    if (spec.group !== group) continue;
+    const l = document.createElement('label'); l.className = 'check'; l.dataset.part = name;
+    l.innerHTML = `<input type="checkbox" checked><span class="swatch"></span><span>${spec.label}</span>`;
+    l.querySelector('.swatch').style.background = spec.colour || '#888';
+    l.querySelector('input').addEventListener('change', e => {
+      visible[name] = e.target.checked;
+      if (meshes[name]) meshes[name].visible = visible[name];
+      needs();
+    });
+    partsEl.appendChild(l);
+  }
+}
+
+document.getElementById('rays').addEventListener('change', e => { rayGroup.visible = e.target.checked; needs(); });
+document.getElementById('datums').addEventListener('change', e => {
+  datumGroup.visible = e.target.checked; labelsEl.style.display = e.target.checked ? '' : 'none'; needs();
+});
+
+document.getElementById('meta').textContent =
+  `commit ${DATA.sha} · millimetres · Z up, z=0 at the port face · ${DATA.variants.length} variants`;
+
+// ---------- render loop (on demand) ----------
+let dirty = true;
+function needs() { dirty = true; }
+function railInset() {
+  const rail = document.getElementById('rail').getBoundingClientRect();
+  const bottomRail = rail.top > 0;          // narrow screens: rail sits at the bottom
+  return bottomRail ? { x: 0, y: rail.height } : { x: rail.width, y: 0 };
+}
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // Shift the projection so the model centres in the free area, not the window.
+  const r = railInset();
+  camera.setViewOffset(w, h, -r.x / 2, r.y / 2, w, h);
+  camera.updateProjectionMatrix();
+  needs();
+}
+addEventListener('resize', resize);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { buildGround(); buildDatums(); buildRays(); renderRayKey(); needs(); });
+new MutationObserver(() => { buildGround(); buildDatums(); buildRays(); renderRayKey(); needs(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function frame() {
+  if (dirty) {
+    dirty = false;
+    renderer.render(scene, camera);
+    placeLabels();
+  }
+  requestAnimationFrame(frame);
+}
+
+resize();
+loadVariant(DATA.variants[0]);
+setView('iso');
+frame();
+</script>

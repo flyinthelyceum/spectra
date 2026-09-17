@@ -26,5 +26,7 @@ saturated organics, which are the pigments the whole project is about.
 
 **Dimensions are not recorded here.** Measured physical dimensions live in
 [`flyinthelyceum/components`](https://github.com/flyinthelyceum/components), one
-writer, written with `python -m components measure`. `as7341_breakout` currently
-reads `CALIPER needed` on every row; the head plate is blocked on those calipers.
+writer, written with `python -m components measure`. `as7341_breakout` was
+calipered on 2026-09-15 and needs **only `PCB_W`**; that one number blocks the
+detector plate and nothing else. (An earlier version of this line claimed the whole
+board was unmeasured. It was quoting a stale memory file rather than the source.)

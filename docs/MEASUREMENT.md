@@ -28,7 +28,7 @@ not change how the reading was taken.
 
 | Kind | Fields it adds | Model that reads it |
 |---|---|---|
-| `paint` | Pigment index, binder, maker, masstone or drawdown, ground, cure days | Kubelka-Munk |
+| `paint` | **Colour Index name** (PB29, PY74), binder, maker, product name, masstone or drawdown, ground, cure days | Kubelka-Munk |
 | `swatch` | Set name, the set's own code, sheet size | Instrument checks, matching |
 | `filament` | Material, maker, lot, nozzle temperature, print orientation | Batch drift, matching |
 | `coating` | Product, applicator, substrate, coats | Matching, drift |
@@ -54,6 +54,22 @@ sign the core table has picked up something specific to one material.
 
 ## The rule that keeps it general
 
-**A field that only one material has does not go in the core.** If a model needs
+**A field that only one material has does not go in the core.
+
+**On `paint`: the Colour Index name is the identity; the product name is not.**
+Two sources fifty years apart say the same thing. Hiler 1942: "Yellow ochre is not
+yellow at all except in name … may be any one of a dozen or more dirty grayed down
+oranges." Bradley 1890: pigment names "all depend on the process of manufacture and
+the mediums with which they are mixed." A reading filed under "Winsor & Newton
+Yellow Ochre" identifies a purchase, not a pigment. File it under PY43 and keep the
+product name alongside. `artiscreation.com` is the lookup. Okumura's 2005 database
+carries exactly this pair of fields, which is the third independent arrival at it.
+See `docs/PRIOR_ART.md`.
+
+**Geometry and illuminant are not optional, and have not been since 1950.** Judd,
+NBS Circular 478, p.48-49: a reported colour measurement must state the illuminant,
+and "the manner of illumination and viewing must also be included in the report."
+The core fields above already require both. That is a standing requirement of the
+field, not a preference of this repo.** If a model needs
 something, the model's kind carries it. Kubelka-Munk needs a cure interval; a
 Color-aid swatch does not have one and must not carry an empty column for it.
