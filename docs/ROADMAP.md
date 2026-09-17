@@ -13,7 +13,7 @@ Each stage has one number, and the stage is not finished until the number exists
 | 2 | C12880MA on the same plate, broadband source | The same library re-measured, against the same tiles |
 
 Stage 1a is a weekend. 1d is where the interesting work is and it is mostly
-software, which is why `pigment/km.py` exists before any of the hardware does.
+software, which is why `spectra/km.py` exists before any of the hardware does.
 
 ## What done looks like
 
