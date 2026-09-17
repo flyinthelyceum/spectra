@@ -3,6 +3,8 @@
 Measured reflectance of physical samples, and the models over them. Read
 `docs/CHARTER.md`, `docs/DECISIONS.md` and `docs/ROADMAP.md` before doing anything;
 they carry rulings whose reasoning is not reconstructible from the code.
+`docs/PRIOR_ART.md` carries what the literature already settled, including several
+things this repo would otherwise re-derive badly.
 
 **Verify:** `.venv/bin/python -m pytest tests/ -q`. Paste the output in the PR.
 
@@ -23,6 +25,15 @@ they carry rulings whose reasoning is not reconstructible from the code.
 - **A masstone is not automatically opaque.** Modern organics are transparent. Use
   the black/white drawdown and `solve_ks_sx`, not the opaque form, unless the film
   has been shown to hide.
+- **CAD is authored against the vendored docs, not from memory.** `docs/build123d/`
+  holds the pinned v0.11.1 reference. Read the file covering what you are about to
+  write, then grep `.venv/lib/python3.13/site-packages/build123d/` for the exact
+  signature — the vendored `.rst` uses autoclass, so signatures are not in the text.
+  Verify numerically before shipping. The PreToolUse hook that used to enforce this
+  was archived on 2026-09-16 and fires nowhere.
+- **Every printed part must be one solid.** Two solids sharing a planar face are two
+  solids to the kernel. Overlap, do not abut. Each part module's `report()` asserts
+  it, and `tests/test_cad.py` holds it.
 - **Never type a measured number into this repo.** Physical dimensions go in
   [`flyinthelyceum/components`](https://github.com/flyinthelyceum/components) via
   `python -m components measure`, one writer, and are imported here. Pigment curves
@@ -32,8 +43,10 @@ they carry rulings whose reasoning is not reconstructible from the code.
 - **The ROADMAP row for saturated organics has no pass threshold on purpose.** It
   is not a test the build can fail. It measures what the cheap detector costs, so a
   $200 purchase is made on evidence. Do not add a threshold to it.
-- **Lane: HOLD.** See `docs/DECISIONS.md`. Model work and documentation proceed.
-  Hardware, orders and head CAD wait for the reopen trigger.
+- **Lane: HOLD, with head CAD explicitly released.** See `docs/DECISIONS.md`.
+  Model work, documentation and the CAD spine proceed — Jared released the head CAD
+  by asking for it on 2026-09-17, overriding his own lane. Hardware and orders still
+  wait for the reopen trigger. Nothing has been printed or bought.
 
 ## Conventions
 
