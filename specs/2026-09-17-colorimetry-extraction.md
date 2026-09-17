@@ -22,20 +22,20 @@ the same reason.
 
 ## What moves
 
-| From `grow-lab` | To `pigment` |
+| From `grow-lab` | To `spectra` |
 |---|---|
-| `tools/color/colorimetry.py` | `pigment/colorimetry.py` |
-| `tools/color/cgats.py` | `pigment/cgats.py` |
-| `tools/color/sample_chart.py` | `pigment/sample_chart.py` |
-| `tools/color/fit_profile.py` | `pigment/fit_profile.py` |
-| `tools/color/check_profile.py` | `pigment/check_profile.py` |
+| `tools/color/colorimetry.py` | `spectra/colorimetry.py` |
+| `tools/color/cgats.py` | `spectra/cgats.py` |
+| `tools/color/sample_chart.py` | `spectra/sample_chart.py` |
+| `tools/color/fit_profile.py` | `spectra/fit_profile.py` |
+| `tools/color/check_profile.py` | `spectra/check_profile.py` |
 | `tests/unit/test_color.py` | `tests/test_colorimetry.py` |
 | `tests/unit/test_color_fit.py` | `tests/test_fit_profile.py` |
-| `tools/color/__init__.py` | folded into `pigment/__init__.py` |
+| `tools/color/__init__.py` | folded into `spectra/__init__.py` |
 
 `docs/COLOR_MEASUREMENT.md` **stays in grow-lab.** It is a scanner workflow written
 for that bench and it reads correctly there. Its command lines change from
-`python tools/color/x.py` to `python -m pigment.x`, and its Files table points here.
+`python tools/color/x.py` to `python -m spectra.x`, and its Files table points here.
 
 `MODEL_KIND` in `fit_profile.py` is the string `"growlab-color-model/1"` and is
 written into every saved model. Changing it silently invalidates models already on
@@ -47,7 +47,7 @@ both.
 A dependency, the same way it already takes `components`:
 
 ```
-pigment @ git+https://github.com/flyinthelyceum/pigment.git@main
+spectra @ git+https://github.com/flyinthelyceum/spectra.git@main
 ```
 
 In an optional `color` extra, not in the base dependency list: the Pi runtime has no
@@ -57,7 +57,7 @@ before removing, it is also used elsewhere.
 
 ## Done test
 
-- `pigment`: `.venv/bin/python -m pytest tests/ -q` green, including the thirty-four
+- `spectra`: `.venv/bin/python -m pytest tests/ -q` green, including the thirty-four
   Sharma/Wu/Dalal pairs, which must still pass unmodified. If those drift, the metric
   is broken rather than imprecise.
 - `grow-lab`: its full suite green with `tools/color/` deleted and the extra installed.
@@ -68,11 +68,11 @@ before removing, it is also used elsewhere.
 ## Verify
 
 ```sh
-# in pigment
+# in spectra
 .venv/bin/python -m pytest tests/ -q
 # in grow-lab
 .venv/bin/python -m pytest tests/ -q
-.venv/bin/python -m pigment.check_profile --help
+.venv/bin/python -m spectra.check_profile --help
 ```
 
 ## Not in this spec

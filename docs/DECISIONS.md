@@ -19,7 +19,7 @@ line of capture code carries forward. Only the driver changes.
 
 **The model is built before the instrument.** Kubelka-Munk, Saunderson, the
 drawdown solve and mixing need no hardware and no cured paint. If the maths is
-wrong, that is found out for free rather than after a two-week cure. `pigment/km.py`
+wrong, that is found out for free rather than after a two-week cure. `spectra/km.py`
 and its tests are the first commit for this reason.
 
 **Saunderson correction is mandatory, not optional.** Measured reflectance off a
@@ -60,7 +60,7 @@ constrains the LED-times-channel product empirically and that is all Lab needs.
 Curve recovery is a regularised fit against assumed basis functions and should be
 described that way in code and in comments.
 
-**Public, name `pigment`.** Public because CI on GitHub-hosted runners and cloud
+**Public, name `pigment`.** (Renamed `spectra` the same day, entry at the end.) Public because CI on GitHub-hosted runners and cloud
 sessions are unauthenticated, and a private dependency needs a deploy token wired
 into every runner and sandbox — the exact blocker found in the `components` review
 one week ago. Nothing here is sensitive. Named for the data rather than the device,
@@ -92,7 +92,7 @@ create the second registry this system already learned about the hard way. See
 
 **It is a characterisation target, not library material.** Jared owns the full
 Color-aid set. Paper cannot be mixed and a silkscreened sheet has no pigment index,
-so nothing from it enters the pigment library; putting it there would make the
+so nothing from it enters the paint library; putting it there would make the
 schema claim something false about every row in it. It goes in its own place, as
 measured Lab and reflectance with no K/S. Full reasoning in `COLOR_AID.md`.
 
@@ -156,3 +156,24 @@ the question to gain generality would trade one failure for the other.
 the thing. The honest parallel is `components` — a bare plural noun naming the measured
 data — which for this would be `spectra`. Renaming is free today with one merged PR and
 no consumers, and it is not free later.
+
+## 2026-09-17 (later still) — renamed `pigment` to `spectra`
+
+`pigment` named the first model rather than the thing the repo holds, which was the
+same narrowing the entry above corrects. `spectra` is the bare plural noun naming the
+measured data, exactly parallel to `components`: that repo holds measured dimensions
+of parts, this one holds measured curves off surfaces.
+
+**`chroma` was considered and rejected on its meaning.** Chroma is a colorimetric
+coordinate, C\* = sqrt(a\*^2 + b\*^2) in CIELAB: one scalar derived from a colour's
+position. The founding argument here is that colorimetric output discards the
+reflectance curve and that mixture behaviour lives in the curve rather than in the Lab
+point. Naming the repo after one coordinate of the representation it exists to see past
+would have been the one word in colour science most precisely wrong. It is also the
+quantity the paint work is about *losing*, so it re-narrowed to paint besides.
+
+`albedo` was the other candidate, accurate and more evocative, rejected as a stretch:
+it implies broadband and hemispherical where this is spectral and 45/0 directional.
+
+Done while the repo was one day old with two merged PRs and no consumers. GitHub keeps
+a redirect from the old name, but nothing should rely on it.

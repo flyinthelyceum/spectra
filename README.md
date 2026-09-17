@@ -1,7 +1,6 @@
-# pigment
+# spectra
 
-Measured spectral reflectance of artists' pigments, and the model that says what
-they do in a mixture.
+Measured reflectance of physical samples, and the models that say what they will do.
 
 An instrument that reads the reflectance of a physical sample, a library of what
 it read, and models that answer questions the raw curves cannot.
@@ -31,7 +30,7 @@ Three things, in order of how long they last:
    flat, opaque, pressable, light-sealed. Specified, not built. `docs/ROADMAP.md`.
 
 **Models** sit on top and each answers its own question. Kubelka-Munk is the first,
-in `pigment/km.py`: absorption and scattering separated, mixtures predicted before
+in `spectra/km.py`: absorption and scattering separated, mixtures predicted before
 any paint is touched, a palette's reachable colours computed as a shape with holes
 in it. Pure standard library, built and tested, needs no hardware. It is a module
 over the store, not the reason the store exists.
@@ -41,8 +40,8 @@ over the store, not the reason the store exists.
 It is `components` for colour. [`flyinthelyceum/components`](https://github.com/flyinthelyceum/components)
 is the one-writer public repo of measured part dimensions, where every number
 carries a provenance line and no project ever types a caliper reading of its own.
-The same discipline fits a pigment: one writer, a provenance line on every curve,
-consumers that import rather than restate.
+The same discipline fits a measured curve: one writer, a provenance line on every
+reading, consumers that import rather than restate.
 
 ## Start here
 
@@ -56,7 +55,7 @@ installed beyond pytest.
 
 | Path | What it is |
 |---|---|
-| `pigment/km.py` | Kubelka-Munk, Saunderson, the drawdown solve, mixing. The first model. |
+| `spectra/km.py` | Kubelka-Munk, Saunderson, the drawdown solve, mixing. The first model. |
 | `docs/CHARTER.md` | The two layers and the line between them. |
 | `docs/MEASUREMENT.md` | What a reading carries, and how a new material joins. |
 | `docs/DECISIONS.md` | Every ruling so far, dated, one line of why each. |

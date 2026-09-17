@@ -49,7 +49,7 @@ kept without them.
 Reflectance is `(sample − dark) / (white − dark)`, per channel per LED, with the
 black reading kept alongside as the noise floor rather than subtracted twice.
 
-Then, before anything is handed to `pigment.km`: **Saunderson.** The chain above
+Then, before anything is handed to `spectra.km`: **Saunderson.** The chain above
 produces a measured reflectance. Kubelka-Munk operates on internal reflectance. The
 step between them is not optional. See `DECISIONS.md`.
 

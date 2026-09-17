@@ -12,7 +12,7 @@ import math
 
 import pytest
 
-from pigment import km
+from spectra import km
 
 
 class TestSaunderson:
