@@ -120,3 +120,39 @@ the booklet asserts rights over the collection and its arrangement and objects t
 cross-referencing it. The measurements are facts about objects Jared owns. A
 complete table keyed to their codes is closer to their arrangement. Decide before
 the table exists.
+
+## 2026-09-17 (later) — the scope was too narrow, and it was the documents not the hardware
+
+Jared, reading the founding set back: the inspiration was a device that gave broad,
+consistent data on all kinds of colour, and this had been written down as an oil-paint
+map. He was right, and the correction is worth recording precisely because the two
+halves were in different states.
+
+**The hardware was never narrow.** A Nix is a contact device: flat, opaque,
+light-sealed at a small port. That is the same envelope as the 45/0 head, so nothing
+measurable with a Nix is out of reach here. At Stage 2 the C12880MA returns 288 pixels
+where a Nix returns three numbers, which is strictly more general than the thing that
+inspired the build. 45/0 is not a narrowing either: it is what makes a glossy surface
+measurable at all, and loosening it buys noise rather than reach.
+
+**The documents were narrow, and that is the real defect.** The founding charter said
+the instrument existed to answer one question. The roadmap's storage stage said
+"pigment index, masstone and drawdown protocol." An agent building against those would
+produce a paint pipeline and nothing else, because that is what they asked for. The
+brief this repo came from opened the same way, and the review it got went after the
+physics and left the scope alone.
+
+**The fix is a line, not a loosening.** The measurement layer is general and the models
+sit on top. `km.py` already had this shape — it depends on nothing and knows nothing
+about pigments — so no code changed. `CHARTER.md` was rewritten, `MEASUREMENT.md` is
+new, and the rule is now in `CLAUDE.md` where a cold session reads it.
+
+**What is deliberately not loosened.** The sharp question stays, in the model layer.
+A general instrument with no defining question is exactly the failure the founding
+charter named in the Nix: a good device pointed at a question nobody asked. Dropping
+the question to gain generality would trade one failure for the other.
+
+**Open, and Jared's call: the repo name.** `pigment` names the first model rather than
+the thing. The honest parallel is `components` — a bare plural noun naming the measured
+data — which for this would be `spectra`. Renaming is free today with one merged PR and
+no consumers, and it is not free later.
