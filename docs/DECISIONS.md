@@ -87,3 +87,36 @@ against all thirty-four Sharma, Wu and Dalal pairs. It moves here and grow-lab
 consumes it, the same move `components` made out of `fabrication`. Copying it would
 create the second registry this system already learned about the hard way. See
 `specs/2026-09-17-colorimetry-extraction.md`.
+
+## 2026-09-17 — the Color-aid 314 set
+
+**It is a characterisation target, not library material.** Jared owns the full
+Color-aid set. Paper cannot be mixed and a silkscreened sheet has no pigment index,
+so nothing from it enters the pigment library; putting it there would make the
+schema claim something false about every row in it. It goes in its own place, as
+measured Lab and reflectance with no K/S. Full reasoning in `COLOR_AID.md`.
+
+**Its value is that its structure is a standard with no reference values attached.**
+The tint, shade and pastel ladders within a hue family were built to run evenly, and
+the gray scale has 19 steps. An instrument that reads a ladder non-monotonically, or
+that lets hue angle wander along one, has a fault, and no certified value was needed
+to find it. That makes ladder checks a Stage 1a acceptance test that costs nothing
+and can run the day the head powers up.
+
+**Precision and coverage, never accuracy.** A search of the vision-science
+literature and the manufacturer's own materials turned up no published spectral or
+colorimetric reference data for these papers, and the booklet says the set is
+periodically readjusted. A ΔE00 against Color-aid therefore says something about
+repeatability, hue coverage, linearity and cross-instrument agreement, and nothing
+about accuracy. It does not displace the ColorChecker order.
+
+**The two instruments split the work by what each is good at.** 314 flat matte
+papers are the flatbed's ideal subject and the head's worst workload, so the flatbed
+takes the set and the head takes a spanning subset, with the shared readings tying
+them together. Recorded because the reverse is the obvious and wrong instinct.
+
+**Publication is an open decision, deliberately raised early.** The repo is public;
+the booklet asserts rights over the collection and its arrangement and objects to
+cross-referencing it. The measurements are facts about objects Jared owns. A
+complete table keyed to their codes is closer to their arrangement. Decide before
+the table exists.

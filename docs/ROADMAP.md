@@ -22,6 +22,8 @@ software, which is why `pigment/km.py` exists before any of the hardware does.
 | 1a | Ten readings of one paint-out, head lifted and replaced between each | Spread under 0.5 ΔE00 |
 | 1a | ColorChecker's 24 patches, scored by `check_profile.py` | Mean under 2.0 ΔE00, max under 5.0 |
 | 1a | Head against the profiled flatbed, same 24 patches | Agreement inside the sum of their error bars |
+| 1a | A Color-aid tint ladder and a shade ladder, one hue family each | L\* monotone, hue angle steady along the ladder |
+| 1a | The Color-aid 19-step gray ladder | No compression at the dark end beyond the measured stray-light term |
 | 1b | A pigment with a known steep edge, measured twice a week apart | Curves overlay within the noise floor |
 | 1c | Every tube read masstone and drawdown, pigment index recorded | The library is complete, not partial |
 | 1d | Six pigments, 50/50 predictions against actual mixes | Broad-curve pairs inside 3 ΔE00 |
@@ -42,7 +44,14 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
 ## Known holes
 
 - **No ColorChecker in hand.** It gates the 1a acceptance rows *and* grow-lab's
-  first real scanner validation. One order unblocks both.
+  first real scanner validation. One order unblocks both. The Color-aid 314 set is
+  on the shelf and covers hue range, linearity and agreement, but carries no
+  reference values, so it cannot stand in for the chart on accuracy.
+- **Color-aid size unrecorded.** Whether the set is 3"×4.5" or 6"×9" decides whether
+  the whole set can be scanned in about fifty flatbed passes or only a spanning
+  subset is viable. See `docs/COLOR_AID.md`.
+- **Publishing the 314-row table is undecided**, and the decision is cheaper before
+  the table exists than after. Same file.
 - **`as7341_breakout` is unmeasured** in the components library: every row reads
   `CALIPER needed`. The head plate cannot be drawn until those calipers are taken
   and written through `python -m components measure`.

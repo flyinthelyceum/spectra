@@ -12,6 +12,7 @@ budgeted.
 | Narrowband LEDs, 7 wavelengths | $15–25 | 1 | 405 / 450 / 505 / 530 / 590 / 625 / 660 nm, a few of each |
 | Constant-current LED driver or MOSFET array | $10–20 | 1 | Constant current: brightness must not drift with supply |
 | ColorChecker Classic | $70–100 | 1 | Shared with the scanner workflow, not an extra. Gates acceptance in both repos. |
+| Color-aid 314 full set | in hand | 1 | The characterisation target: 24 hue symbols, even tint/shade/pastel ladders, a 19-step gray scale. Tests coverage, linearity and cross-instrument agreement, none of which the 24-patch chart reaches. Not an accuracy standard and not library material — `docs/COLOR_AID.md`. |
 | Black/white drawdown cards | $10–20 | 1 | Two grounds under one film is how K and S come apart for a transparent pigment |
 | Drawdown bar | $30–60 | 1 | Thickness never has to be known, only repeated. One bar, every film. |
 | Titanium white, artist grade | ~$20 | 1 | For tints as a check on prediction; one tube, consistent across every measurement |
