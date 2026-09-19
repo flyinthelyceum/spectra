@@ -6,3 +6,6 @@ out/
 export/
 data/raw/
 *.egg-info/
+
+# generated viewer output and its download cache
+export/
