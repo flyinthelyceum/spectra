@@ -1,9 +1,9 @@
-# The `pigment` package: measured pigment spectra and the mixing model over them.
+# The `spectra` package: measured reflectance of physical samples, and the models over them.
 #   pip install -e .        (from a checkout)
 [project]
-name = "pigment"
+name = "spectra"
 version = "0.1.0"
-description = "Measured spectral reflectance of artists' pigments, and the Kubelka-Munk model that predicts what they do in a mixture."
+description = "Measured reflectance of physical samples, and the models over them. Kubelka-Munk is the first."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
@@ -13,11 +13,11 @@ dependencies = []
 capture = ["pyserial>=3.5", "Pillow>=10.0"]
 
 [project.urls]
-Source = "https://github.com/flyinthelyceum/pigment"
+Source = "https://github.com/flyinthelyceum/spectra"
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["pigment"]
+packages = ["spectra"]

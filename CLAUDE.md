@@ -1,6 +1,6 @@
-# pigment — working agreement
+# spectra — working agreement
 
-Measured pigment spectra and the Kubelka-Munk model over them. Read
+Measured reflectance of physical samples, and the models over them. Read
 `docs/CHARTER.md`, `docs/DECISIONS.md` and `docs/ROADMAP.md` before doing anything;
 they carry rulings whose reasoning is not reconstructible from the code.
 
@@ -37,7 +37,7 @@ they carry rulings whose reasoning is not reconstructible from the code.
 
 ## Conventions
 
-- Standard library only in `pigment/`. Capture-side dependencies go behind the
+- Standard library only in `spectra/`. Capture-side dependencies go behind the
   `capture` extra, never in the core.
 - Reflectance is 0..1, per wavelength, sequences in wavelength order. Nothing in
   `km.py` knows what those wavelengths are.
