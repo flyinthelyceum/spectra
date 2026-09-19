@@ -1,0 +1,82 @@
+name: Tests
+
+# test_km.py is the Kubelka-Munk model. Pure Python, no dependencies, runs in
+# seconds. It asserts properties a mixture must hold rather than numbers a
+# previous run produced, so it fails when the model stops being physical.
+#
+# The CAD job below is deliberately conditional. tests/test_cad.py currently
+# exists only on the claude/optical-head-and-viewer branch, not on main, so on
+# main there is nothing for it to run and pytest would exit 4 rather than pass.
+# Rather than drop the job and have to remember to add it back when that branch
+# lands, it checks for the file and skips when it is absent. When the optical
+# head merges, the job starts doing real work on its own.
+#
+# Added 2026-09-18. Both suites were written and nothing was running either.
+# This repo is public, so Actions minutes are free here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model:
+    name: Kubelka-Munk model
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest
+
+      - name: Model tests
+        run: pytest -q tests/test_km.py
+
+  cad:
+    name: Optical head geometry
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Are there CAD tests on this branch
+        id: probe
+        run: |
+          if [ -f tests/test_cad.py ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "tests/test_cad.py is not on this branch; nothing to run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.probe.outputs.present == 'true'
+        with:
+          # build123d 0.11.1 has no OCP wheels for 3.14; pyproject says to build
+          # the local venv with python3.13 for exactly this reason.
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install with the cad extra
+        if: steps.probe.outputs.present == 'true'
+        # `components` comes from the components-v1 TAG, so this reads the
+        # measurements frozen at that tag rather than whatever main holds.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[cad]" pytest
+
+      - name: CAD tests
+        if: steps.probe.outputs.present == 'true'
+        run: pytest -q tests/test_cad.py
