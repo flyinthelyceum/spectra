@@ -177,3 +177,103 @@ it implies broadband and hemispherical where this is spectral and 45/0 direction
 
 Done while the repo was one day old with two merged PRs and no consumers. GitHub keeps
 a redirect from the old name, but nothing should rely on it.
+
+## 2026-09-17 — the head is drawn, and the viewer draws light as well as shape
+
+**Lane note.** `docs/ROADMAP.md` and `CLAUDE.md` both put head CAD behind the
+09-23 reopen. Jared asked for the viewer directly and then said go. He is
+overriding his own lane; saying so rather than pretending the lane allowed it.
+Nothing was ordered and nothing was printed.
+
+**The CAD spine lives in this repo**, per the ruling on 2026-09-17 that everything
+goes in the new repo. `spectra/cad/` holds `params`, `head`, `plate`, `trap`,
+`assembly`, `viewer`. build123d 0.11.1 on Python 3.13, behind a `cad` extra so the
+core stays standard-library-only. The pinned docs are vendored into
+`docs/build123d/` because the doc-grounding hook was archived on 09-16 and fires
+nowhere.
+
+**The viewer is a port, and gained one thing.** `spectra/cad/viewer.py` and its
+template come from `workbench/bench/viewer.py`, itself ported from grow-lab. The
+pattern was not re-derived. What is new is a **ray overlay**: `assembly.rays()`
+returns the illumination path, the specular lobe, the collection cone and the three
+circles on the sample plane, computed from `params` alone, and the page draws them.
+
+That is not decoration. `OPTICAL_HEAD.md` calls 45/0 the single most important
+mechanical decision in the build, and whether the specular lobe clears the
+collection tube is a question about light, which no render of solids can answer.
+Looking at it is check 7 in the spec and it is the only check that is not runnable.
+It was run: the section view shows the beam arriving at 45 degrees, the red
+specular ray leaving at 45 on the far side, and the tube standing well clear.
+
+**The palette is the fabrication house register, not the 3D Studio Color
+Doctrine.** The Doctrine governs studio artifacts. This is a bench instrument in
+black PETG, which is the register the growlab enclosure and the CNC station
+already use: Transparent's light ground, ghosted glass, one red. The single red is
+spent on the specular ray, because that ray is the one thing in the build that must
+not reach the detector — which is exactly the Doctrine's own rule that red means
+consequence, applied in the right register.
+
+### Two errors this entry exists to record
+
+**The collection tube was first drawn starting 2mm above the port face**, which put
+it inside the illumination. At 45 degrees the beam is at radius r = z, so at z = 2
+it is 2mm off axis and the 3.6mm-radius tube is standing in it. Caught in the
+constraint arithmetic before anything was drawn. The condition is now a test:
+`BAFFLE_OD/2 < BAFFLE_Z0 * tan(ILLUM_ANGLE)`, and `BAFFLE_Z0` is 6.0.
+
+**The acceptance angle was first computed as `atan(COLLECT_D / BAFFLE_L)`**, which
+answers a different question — whether any ray at that angle can traverse the tube
+from somewhere — and overstates the acceptance by a factor of two. The figure that
+matters is for a ray from the sample reaching a detector on the axis:
+`atan(COLLECT_D/2 / BAFFLE_L)`, which is 6.3 degrees rather than 12.5. The
+conservative form is in `params`.
+
+Both are in the docstrings at the point of use, not only here.
+
+### What is still resting on a guess
+
+`LED_HALF_ANGLE = 15` is an estimate and the geometry rests on it: it decides the
+lit spot, which must overfill the port. The viewer opens on a three-way sweep of
+it, and the 8-degree variant **fails its own constraint and says so on the page**.
+Specify the LED before printing.
+
+## 2026-09-17 — the colour library was read against the charter
+
+Jared has kept a science-based colour library on Drive since 2021: 26 texts,
+1868 to 2016, plus his own annotated bibliography. It was read against the
+charter. `docs/PRIOR_ART.md` is the result and the detail is there, not here.
+
+Four things changed in this repo because of it:
+
+1. **A `paint` reading is identified by its Colour Index name**, with the product
+   name alongside. Hiler 1942 and Bradley 1890 independently say a product name
+   does not identify a pigment; Okumura's 2005 database carries both fields.
+   `docs/MEASUREMENT.md`.
+2. **ΔE00 cannot be the acceptance test for pigment identification.** Cohen 1995
+   proves any k-band curve splits into a rank-3 fundamental and a (k−3)-dimensional
+   residual that human vision cannot see. ΔE00 is blind to the residual by
+   construction, so two chemically different mixtures can match to ΔE00 < 0.5 and
+   have visibly different curves. Identification must compare raw curves, never a
+   round trip through XYZ or Lab. This is also the cleanest statement of why the
+   charter stores the curve.
+3. **Stage 1 is a differential instrument.** Three sources converge on ~10nm as
+   working resolution; Judd's verdict on the closest period analogue is that such
+   devices are good for differences between non-metameric pairs and not for
+   absolute work. This confirms what `OPTICAL_HEAD.md` already said rather than
+   contradicting it, and it is an argument for building Stage 1 — you cannot
+   measure the error bars without it — and against publishing Stage 1 numbers as
+   identifications.
+4. **Okumura 2005 is prior art for most of this repo** and should be read before
+   stage 1 hardware is ordered. He independently arrived at the same
+   measurement-layer / model-layer split. He also hit the opacity wall that
+   `solve_ks_sx` exists to get around, and did not have the fix.
+
+**The finding worth keeping:** Jared's own bibliography says artistpigments.org's
+Kubelka-Munk tool "does not, in my opinion, adequately account for the effects of
+pigment transparency/opacity." That is this project's thesis, written years before
+the repo, and `km.py`'s drawdown solve is the answer to it.
+
+**Open, and not ruled here:** whether re-measuring the same physical sample over
+time belongs in the model as a series. Both fading (Hiler) and coating chemistry
+(Okumura's UV stabiliser shifting 360–450nm) say a reading is a point in time, not
+a permanent fact. The `date` field exists; nothing consumes it as a series.

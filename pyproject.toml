@@ -11,6 +11,13 @@ dependencies = []
 [project.optional-dependencies]
 # The capture side only. The model and the library need nothing.
 capture = ["pyserial>=3.5", "Pillow>=10.0"]
+# The CAD spine. build123d 0.11.1 needs Python 3.13 — the system 3.14 has no OCP
+# wheels — so build the venv with /opt/homebrew/bin/python3.13. `components` is
+# the one writer for measured physical dimensions and is imported, never copied.
+cad = [
+  "build123d==0.11.1",
+  "components @ git+https://github.com/flyinthelyceum/components.git@components-v1",
+]
 
 [project.urls]
 Source = "https://github.com/flyinthelyceum/spectra"
@@ -20,4 +27,4 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["spectra"]
+packages = ["spectra", "spectra.cad"]
