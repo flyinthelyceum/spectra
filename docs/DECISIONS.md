@@ -366,3 +366,14 @@ sources the LED is the resolution and the channels are the cross-check.
 waiting on the bins. The PTFE tile holder in `spectra/cad/trap.py` stays in the
 model and prints at 1d with the tile.
 
+### Sixth ruling, same day: Stage 1a reads through a Pi, not the ESP32
+
+The BOM had an ESP32 in hand and no firmware. Nothing in the repo read the sensor
+at all. The shortest path to a number is a spare Pi (Jared: "there is a spare
+pi") running the Adafruit CircuitPython libraries for the AS7341 and the TLC59711
+under Blinka, so the capture code is ordinary Python in this package, tested on
+the Mac against fakes and run unchanged on the Pi. The ESP32 buys nothing at 1a
+except firmware to write. grow-lab's own AS7341 driver is not reused: it is async,
+bound to grow-lab's models, and grow-lab already depends on this repo, so the
+import would be circular. Spec: `specs/2026-09-22-capture-1a.md`.
+

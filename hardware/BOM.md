@@ -5,8 +5,8 @@ budgeted.
 
 | Item | Est. | Stage | Note |
 |---|---|---|---|
-| AS7341 breakout | in hand | 1 | Its own board out of back stock, not the one cased on the station. Shared hardware means unmounting, re-seating and re-calibrating between sessions, and a calibration that has to be redone before every use quietly stops being done. |
-| ESP32 | in hand | 1 | |
+| AS7341 breakout | in hand | 1a | Its own board out of back stock, not the one cased on the station. Shared hardware means unmounting, re-seating and re-calibrating between sessions, and a calibration that has to be redone before every use quietly stops being done. |
+| ESP32 | in hand | later | Not used for Stage 1a. Capture runs on a spare Pi with the Adafruit CircuitPython libraries under Blinka (ruled 2026-09-22, `specs/2026-09-22-capture-1a.md`). |
 | PETG, black | in hand | 1 | Head, detector plate, light trap |
 | PLA, matte black | ordered 2026-09-22 | 1a | The first samples. A printed chip is flat, opaque and pressable, which is the whole envelope the port asks for. Ruled 2026-09-22; confirm a spool is on the shelf. |
 | Sintered PTFE white tile | $40–80 | 1d | Cut from 1a, ruled 2026-09-22. Stage 1a is ratios against a white, so the ColorChecker white patch (19, matte, published reflectance near 90%) is the reference. The tile returns when absolute reflectance or cross-instrument agreement is on the table. Uncertified sintered PTFE is enough; certified Spectralon is not needed. |

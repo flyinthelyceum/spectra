@@ -56,6 +56,7 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
   the gate test skips itself. This hole was quoted from memory files for five days
   after it closed; measurement state is read from the components repo, never from
   here. `docs/DECISIONS.md` 2026-09-22.
+- **No capture code.** Nothing in this repo reads the sensor; the acceptance rows above cannot be measured until something does. Specified 2026-09-22 as `specs/2026-09-22-capture-1a.md`: a Pi, Blinka, the Adafruit AS7341 and TLC59711 libraries, a dark/white/sample cycle, one CSV per session. In progress on `claude/capture-1a`.
 - **Saunderson `k1` is unfitted.** The default is a normal-incidence Fresnel value,
   not a measurement of this head. It should be fitted against the chart once the
   head exists, and the fitted value recorded here. Okumura 2005 fits k1 ≈ 0.03–0.04
