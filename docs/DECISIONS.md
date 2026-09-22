@@ -310,3 +310,23 @@ file and the Todoist task all still said it was the one missing number. They wer
 quoting each other. Retired in this commit; the source of truth for measurement
 state is the components repo and nothing here.
 
+### A fourth ruling, later the same day: no PTFE tile for Stage 1a
+
+Jared, on the order list: the sintered PTFE tile "seems exorbitantly expensive.
+what is it and how critical is it?" The answer is that it is not critical at 1a.
+Every 1a number is a ratio, sample over white, and a ratio does not care what the
+white's absolute reflectance is, only that it holds still and is roughly flat
+across the band. The ColorChecker white patch is matte, has published
+per-wavelength reflectance near 90%, and is already on order. So the tile moves
+from 1a to 1d, where absolute reflectance and agreement with another instrument
+start to matter. Ruled "do it" 2026-09-22.
+
+Two things worth keeping from the same exchange. A print shop cannot lend a white
+reference; the one in a handheld spectrophotometer is a ceramic tile built into
+the instrument. The better ask of a print shop is ten minutes with that
+instrument on our chips, which is ground truth for the whole head. And the BOM
+line "the one part not worth improvising" was wrong for this stage; it was true of
+absolute work and was written before the stages were separated.
+
+Ordered 2026-09-22: ColorChecker Classic, Adafruit 1455 driver, matte black PLA.
+

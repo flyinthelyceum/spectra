@@ -5,7 +5,7 @@ Each stage has one number, and the stage is not finished until the number exists
 | Stage | Build | Usable output |
 |---|---|---|
 | 0 | Colour maths extracted from grow-lab; grow-lab consumes it | Both repos green on their own suites |
-| 1a | Head printed, AS7341 mounted, white LED only, dark/black/white cycle | Reads the ColorChecker. Gives the repeatability number. |
+| 1a | Head printed, AS7341 mounted, white LED only, dark/black/white cycle (white = ColorChecker patch 19) | Reads the ColorChecker. Gives the repeatability number. |
 | 1b | LED ring, sequential capture, per-LED integration time | 56 numbers per sample. Coarse reflectance curves. |
 | 1c | The general store: sample ids, dated readings, calibration state, sample kinds | A library that takes any flat opaque sample |
 | 1c+ | The `paint` kind: pigment index, masstone and drawdown protocol | The tubes on hand, measured |
@@ -45,7 +45,7 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
 
 ## Known holes
 
-- **No ColorChecker in hand.** It gates the 1a acceptance rows *and* grow-lab's
+- ~~**No ColorChecker in hand.**~~ ORDERED 2026-09-22, with the LED driver and matte black PLA. It gates the 1a acceptance rows *and* grow-lab's
   first real scanner validation. One order unblocks both. The Color-aid 314 set is
   on the shelf and covers hue range, linearity and agreement, but carries no
   reference values, so it cannot stand in for the chart on accuracy.
