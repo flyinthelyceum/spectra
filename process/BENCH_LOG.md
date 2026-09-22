@@ -19,6 +19,7 @@ Next: ...
 - ~~Calipers on the AS7341 breakout.~~ Done 2026-09-17; the plate builds.
 - A ColorChecker on the shelf. Ordered 2026-09-22.
 - ~~A sintered PTFE white tile on the shelf.~~ Not for 1a (ruled 2026-09-22): the ColorChecker white patch is the reference. The tile is a 1d item.
-- The LED part chosen from a datasheet, so `LED_HALF_ANGLE` is no longer an estimate.
+- ~~The LED part chosen from a datasheet, so `LED_HALF_ANGLE` is no longer an estimate.~~ Done 2026-09-22: eight parts ruled and ordered, `LED_HALF_ANGLE` 10 (CHOSEN), `LED_Z` 18, `LED_SEAT_D` 5.3.
+- A bore coupon printed (5.2 to 5.6 mm) and `LED_SEAT_D` set to the one that holds a 5 mm LED by friction, before the head prints.
 - Matte black PLA chips printed: the first samples (ruled 2026-09-22; paint-outs wait for 1c+).
 - ~~The cure interval fixed.~~ Deferred to 1c+ by the same ruling; still owed before the first paint-out.

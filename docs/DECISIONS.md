@@ -330,3 +330,39 @@ absolute work and was written before the stages were separated.
 
 Ordered 2026-09-22: ColorChecker Classic, Adafruit 1455 driver, matte black PLA.
 
+### Fifth ruling, same day: the LED set, and the geometry that follows from it
+
+Jared: "I don't have a pure white led. let's rule on everything and I'll order
+all LEDs now. Is 5.3 the way to go?"
+
+**Bore.** Yes. Every part in the set is a 5 mm lamp, so `LED_SEAT_D` becomes one
+knob at 5.3, CHOSEN. FDM holes print small, so a coupon at 5.2 to 5.6 is printed
+first and the knob set to the bore that holds by friction. The tube, plate and
+trap are unchanged; the body grows from 44.5 to 54.6 mm across.
+
+**Half angle.** `LED_HALF_ANGLE` drops from the 15 degree estimate to 10, CHOSEN
+from datasheets: four of the Kingbright parts list a 20 degree viewing angle. The
+narrowest LED is the one that can underfill the port, so it is the number the
+geometry is checked against; the wider ones only make that constraint easier.
+
+**Height.** At 10 degrees `LED_Z` 14 underfills the port by a millimetre. 18 is
+the only value that passes: 16 still underfills, 20 puts the LED seats through
+the detector plate. Margins at 18 are +0.98 mm on overfill and +1.76 mm on plate
+clearance, both real but thin, and the viewer should be re-run at 8/10/12 degrees
+before the print in case a batch runs narrower than its datasheet.
+
+**The set.** Two changes to the seven colours. The 530 (WP7113ZGCK, real peak
+515) sat 14 nm from the 505 (real peak 501) and left a 75 nm hole between 515 and
+590; it is replaced by the WP7113SGC at 565, which brings the largest gap in the
+ring down to 64 nm (501 to 565). The 660 was a LEDSupply part with no datasheet
+and a 50 degree beam; it is replaced by the Kingbright WP7113SRD/D, 660 nm peak,
+20 nm FWHM, 30 degree beam, from a Kingbright datasheet. The 590 and 625 move
+from their 3 mm packages to the 5 mm siblings (WP7113SYCK/J3, WP7113SEC/J3). Real
+peaks around the ring: 400, 460, 501, 565, 590, 630, 660, plus the white. This
+is a tiling of the band, not an alignment to the AS7341 channels; with narrow
+sources the LED is the resolution and the channels are the cross-check.
+
+**Stage 1a.** The white (Cree C513A) is on the same order, so 1a is no longer
+waiting on the bins. The PTFE tile holder in `spectra/cad/trap.py` stays in the
+model and prints at 1d with the tile.
+

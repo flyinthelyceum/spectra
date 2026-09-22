@@ -120,28 +120,33 @@ LED_N = 8
 asks for: seven narrowband peaks (405, 450, 505, 530, 590, 625, 660) plus one
 white LED kept in the ring as a sanity channel."""
 
-LED_Z = _knob("LED_Z", 14.0)
+LED_Z = _knob("LED_Z", 18.0)
 """CHOSEN. Height of the LED emitter plane above the port face. It trades two
 things against each other: lower puts the emitters closer, which is brighter and
 lights a smaller spot; higher lights a bigger spot and makes the head fatter.
-14mm is the smallest value that still overfills the port with the beam estimate
-below and a whole millimetre of margin. See check()."""
+18mm is the smallest value at which the narrowest LED in the chosen set (10
+degree half angle) still overfills the port with a whole millimetre of margin;
+14mm passed only under the old 15 degree estimate. Ruled 2026-09-22. See
+check()."""
 
-LED_SEAT_D = 3.2
-"""ESTIMATE. Bore for a 3mm through-hole LED plus print clearance. The LED part
-number is not chosen, so this is a stand-in. Owed: the real emitter package."""
+LED_SEAT_D = _knob("LED_SEAT_D", 5.3)
+"""CHOSEN. Bore for a 5mm (T-1 3/4) through-hole LED plus print clearance. Every
+LED in the ruled set is 5mm (2026-09-22), so one bore serves the ring. 5.3 is the
+model value; FDM holes print small, so a coupon at 5.2 to 5.6 is printed before
+the head and this knob is set to the bore that holds by friction."""
 
 LED_SEAT_L = 6.0
-"""ESTIMATE. How deep the LED sits in its bore. Long enough to aim it; the real
-number follows the real LED."""
+"""CHOSEN. How deep the LED sits in its bore. A 5mm lamp body is 8.6mm tall
+below the dome; 6mm of bore aims it and leaves the leads clear."""
 
-LED_HALF_ANGLE = _knob("LED_HALF_ANGLE", 15.0)
-"""ESTIMATE, and the single load-bearing guess in this file. Datasheet-typical
-half-intensity angle for a narrow 3mm LED. It decides the lit spot size, which
-decides whether the beam overfills the port, which is one of the three
-constraints this geometry exists to satisfy. A wide-angle LED (30 degrees plus)
-makes the spot larger and the constraint easier; a water-clear narrow one
-(8 degrees) could fail it. Measure or specify before printing."""
+LED_HALF_ANGLE = _knob("LED_HALF_ANGLE", 10.0)
+"""CHOSEN from datasheets, 2026-09-22. The narrowest half-intensity angle in the
+ruled LED set: Kingbright WP7113QBC/D, WP7113SGC, WP7113SYCK/J3 and WP7113SEC/J3
+all list a 20 degree viewing angle (2 x theta-half), so theta-half is 10. The
+rest are wider (HLMP-CE34 about 15, WP7113SRD/D 15, C513A white 27.5, MT5400-UV
+about 30) and a wider beam only makes the overfill constraint easier. The
+narrowest LED is the binding case, so it is the number the geometry is checked
+against. `hardware/BOM.md` carries the part list."""
 
 # ----------------------------------------------------------------- the body --
 
@@ -225,7 +230,7 @@ BODY_H = PLATE_Z
 """DERIVED. The body ends where the plate begins."""
 
 LIT_BEAM_D = 2 * LED_THROW * math.tan(math.radians(LED_HALF_ANGLE))
-"""DERIVED from an ESTIMATE. Beam diameter at the sample, measured across the
+"""DERIVED from the chosen half angle. Beam diameter at the sample, measured across the
 beam. Only as good as LED_HALF_ANGLE."""
 
 LIT_SPOT_MINOR = LIT_BEAM_D
@@ -281,7 +286,7 @@ def constraints() -> list[tuple[str, bool, str]]:
         LIT_SPOT_MINOR >= PORT_D,
         f"lit minor axis {LIT_SPOT_MINOR:.2f} vs port {PORT_D:.2f} "
         f"(margin {LIT_SPOT_MINOR - PORT_D:+.2f}), resting on "
-        f"LED_HALF_ANGLE={LED_HALF_ANGLE:g}deg which is an ESTIMATE",
+        f"LED_HALF_ANGLE={LED_HALF_ANGLE:g}deg, the narrowest LED in the ruled set",
     ))
 
     # 2. The collected spot must sit inside the lit one, with room to move.
