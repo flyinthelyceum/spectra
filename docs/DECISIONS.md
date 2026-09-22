@@ -355,8 +355,11 @@ before the print in case a batch runs narrower than its datasheet.
 515) sat 14 nm from the 505 (real peak 501) and left a 75 nm hole between 515 and
 590; it is replaced by the WP7113SGC at 565, which brings the largest gap in the
 ring down to 64 nm (501 to 565). The 660 was a LEDSupply part with no datasheet
-and a 50 degree beam; it is replaced by the Kingbright WP7113SRD/D, 660 nm peak,
-20 nm FWHM, 30 degree beam, from a Kingbright datasheet. The 590 and 625 move
+and a 50 degree beam; it is replaced by the Kingbright WP7113SRD/J4, 660 nm peak,
+30 degree beam, from a Kingbright datasheet. (First written as the /D suffix,
+which Jared found obsolete at Digi-Key while ordering; the /J4 is the current
+sort of the same lamp. His proposed substitute, Würth 151051RS11000, is a 650 nm
+peak with a 30 nm bandwidth and 30 mcd, too close to the 630 and too dim, so no.) The 590 and 625 move
 from their 3 mm packages to the 5 mm siblings (WP7113SYCK/J3, WP7113SEC/J3). Real
 peaks around the ring: 400, 460, 501, 565, 590, 630, 660, plus the white. This
 is a tiling of the band, not an alignment to the AS7341 channels; with narrow

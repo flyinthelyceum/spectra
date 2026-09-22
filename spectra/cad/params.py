@@ -143,7 +143,7 @@ LED_HALF_ANGLE = _knob("LED_HALF_ANGLE", 10.0)
 """CHOSEN from datasheets, 2026-09-22. The narrowest half-intensity angle in the
 ruled LED set: Kingbright WP7113QBC/D, WP7113SGC, WP7113SYCK/J3 and WP7113SEC/J3
 all list a 20 degree viewing angle (2 x theta-half), so theta-half is 10. The
-rest are wider (HLMP-CE34 about 15, WP7113SRD/D 15, C513A white 27.5, MT5400-UV
+rest are wider (HLMP-CE34 about 15, WP7113SRD/J4 15, C513A white 27.5, MT5400-UV
 about 30) and a wider beam only makes the overfill constraint easier. The
 narrowest LED is the binding case, so it is the number the geometry is checked
 against. `hardware/BOM.md` carries the part list."""
