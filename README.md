@@ -64,6 +64,37 @@ installed beyond pytest.
 | `hardware/BOM.md` | Stock-level quantities. Not a wiring diagram. |
 | `process/BENCH_LOG.md` | What actually happened at the bench. The human is the test runner. |
 
+## Stage 1a on the Pi
+
+`spectra/capture/` reads the AS7341 and drives the TLC59711 through Blinka, so the
+same code that runs on the Pi also runs on the Mac against fakes. `specs/2026-09-22-capture-1a.md`
+is the contract.
+
+Enable I2C and SPI with `raspi-config` (Interface Options), then:
+
+```sh
+pip install -e .[pi]
+```
+
+Wiring:
+
+1. AS7341 breakout: SDA to Pi SDA, SCL to Pi SCL, VIN to 3.3V, GND to GND.
+2. TLC59711: SCK to Pi SCLK, MOSI to Pi MOSI. No MISO; the chip is write-only.
+3. TLC59711: VCC to its own 5V rail, GND to the Pi's GND.
+4. TLC59711 channel 0 output to the white LED (Cree C513A).
+5. Channels 1-7 to the seven colour LEDs (wavelengths ruled in `hardware/BOM.md`); wired, unused until Stage 1b.
+
+Then, in order:
+
+```sh
+python -m spectra.capture session new SESSION_DIR
+python -m spectra.capture session read SESSION_DIR SAMPLE_ID
+python -m spectra.capture repeat SESSION_DIR SAMPLE_ID --count 10
+```
+
+To try the CLI on the Mac with no hardware at all, put `--fake` before the
+subcommand on any of the three: `python -m spectra.capture --fake session new /tmp/s`.
+
 ## Where the colour maths lives
 
 The CIE conversions, the CIEDE2000 metric and the scanner profiling workflow were
