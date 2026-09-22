@@ -20,7 +20,7 @@ software, which is why `spectra/km.py` exists before any of the hardware does.
 | Stage | Test | Passes at |
 |---|---|---|
 | 0 | Both suites green, no colour code left duplicated in two repos | Green, and one copy |
-| 1a | Ten readings of one paint-out, head lifted and replaced between each | Spread under 0.5 ΔE00 |
+| 1a | Ten readings of one matte black PLA chip, head lifted and replaced between each (paint-outs come at 1c+, ruled 2026-09-22) | Spread under 0.5 ΔE00 |
 | 1a | ColorChecker's 24 patches, scored by `check_profile.py` | Mean under 2.0 ΔE00, max under 5.0 |
 | 1a | Head against the profiled flatbed, same 24 patches | Agreement inside the sum of their error bars |
 | 1a | A Color-aid tint ladder and a shade ladder, one hue family each | L\* monotone, hue angle steady along the ladder |
@@ -49,17 +49,13 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
   first real scanner validation. One order unblocks both. The Color-aid 314 set is
   on the shelf and covers hue range, linearity and agreement, but carries no
   reference values, so it cannot stand in for the chart on accuracy.
-- **Publishing the 314-row table is undecided**, and the decision is cheaper before
-  the table exists than after. Same file.
-- **`as7341_breakout` needs one number: `PCB_W`.** An earlier version of this line
-  said the board was unmeasured on every row. That was wrong — it was read from a
-  memory file dated 2026-09-14, a day before the board was actually calipered. The
-  source is `components/as7341_breakout.py`, and as of 2026-09-15 every row except
-  `PCB_W` carries `CALIPER 2026-09-15 JR`. Only the detector plate is blocked, and
-  only because the sensor's offset across the board is measured from the edge whose
-  distance `PCB_W` supplies. `spectra/cad/plate.py` raises with that message and
-  `assembly.py` omits the plate; the rest of the head builds and renders. Take one
-  caliper reading and write it with `python -m components measure`.
+- ~~**Publishing the 314-row table is undecided.**~~ DECIDED 2026-09-22: public,
+  in this repo, citing the collection rather than reproducing it. `docs/DECISIONS.md`.
+- ~~**`as7341_breakout` needs one number: `PCB_W`.**~~ CLOSED 2026-09-22. `PCB_W`
+  was calipered 2026-09-17 (`components/as7341_breakout.py`). The plate builds and
+  the gate test skips itself. This hole was quoted from memory files for five days
+  after it closed; measurement state is read from the components repo, never from
+  here. `docs/DECISIONS.md` 2026-09-22.
 - **Saunderson `k1` is unfitted.** The default is a normal-incidence Fresnel value,
   not a measurement of this head. It should be fitted against the chart once the
   head exists, and the fitted value recorded here. Okumura 2005 fits k1 ≈ 0.03–0.04
@@ -76,6 +72,8 @@ earths land inside 3 and the organics land past 8, that gap is the purchase orde
   so the pinned v0.11.1 docs are vendored into `docs/build123d/` (72 files, commit
   recorded in `SOURCE_COMMIT.txt`). Read the file that covers what you are about to
   write, before you write it.
-- **Cure interval.** Two weeks is proposed and not yet fixed. It must be settled
-  before the first paint-out, because changing it later invalidates everything
-  measured under the old convention. Record the date with every reading regardless.
+- **Cure interval, deferred.** Two weeks is proposed and not yet fixed. It no longer
+  gates the head: the first run measures matte black PLA prints (ruled 2026-09-22),
+  so the first paint-out is a 1c+ event. It must still be settled before that
+  paint-out, because changing it later invalidates everything measured under the old
+  convention. Record the date with every reading regardless.

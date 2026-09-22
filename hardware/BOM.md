@@ -8,15 +8,16 @@ budgeted.
 | AS7341 breakout | in hand | 1 | Its own board out of back stock, not the one cased on the station. Shared hardware means unmounting, re-seating and re-calibrating between sessions, and a calibration that has to be redone before every use quietly stops being done. |
 | ESP32 | in hand | 1 | |
 | PETG, black | in hand | 1 | Head, detector plate, light trap |
+| PLA, matte black | in hand? | 1a | The first samples. A printed chip is flat, opaque and pressable, which is the whole envelope the port asks for. Ruled 2026-09-22; confirm a spool is on the shelf. |
 | Sintered PTFE white tile | $40–80 | 1 | The one part not worth improvising |
 | Narrowband LEDs, 7 wavelengths | $15–25 | 1 | 405 / 450 / 505 / 530 / 590 / 625 / 660 nm, a few of each |
 | Constant-current LED driver or MOSFET array | $10–20 | 1 | Constant current: brightness must not drift with supply |
 | ColorChecker Classic | $70–100 | 1 | Shared with the scanner workflow, not an extra. Gates acceptance in both repos. |
 | Color-aid 314 full set | in hand | 1 | The characterisation target: 24 hue symbols, even tint/shade/pastel ladders, a 19-step gray scale. Tests coverage, linearity and cross-instrument agreement, none of which the 24-patch chart reaches. Not an accuracy standard and not library material — `docs/COLOR_AID.md`. |
-| Black/white drawdown cards | $10–20 | 1 | Two grounds under one film is how K and S come apart for a transparent pigment |
-| Drawdown bar | $30–60 | 1 | Thickness never has to be known, only repeated. One bar, every film. |
-| Titanium white, artist grade | ~$20 | 1 | For tints as a check on prediction; one tube, consistent across every measurement |
-| Digital scale, 0.01 g | $20–30 | 1 | Ratios by mass. Mixing by eye makes the model meaningless. |
+| Black/white drawdown cards | $10–20 | 1c+ | Two grounds under one film is how K and S come apart for a transparent pigment |
+| Drawdown bar | $30–60 | 1c+ | Thickness never has to be known, only repeated. One bar, every film. |
+| Titanium white, artist grade | ~$20 | 1c+ | For tints as a check on prediction; one tube, consistent across every measurement |
+| Digital scale, 0.01 g | $20–30 | 1c+ | Ratios by mass. Mixing by eye makes the model meaningless. |
 | Hamamatsu C12880MA | ~$200 | 2 | Only after the gap is measured |
 | ADC and clean analogue front end | $20–40 | 2 | The C12880MA's readout deserves better than a bare GPIO |
 
@@ -26,7 +27,7 @@ saturated organics, which are the pigments the whole project is about.
 
 **Dimensions are not recorded here.** Measured physical dimensions live in
 [`flyinthelyceum/components`](https://github.com/flyinthelyceum/components), one
-writer, written with `python -m components measure`. `as7341_breakout` was
-calipered on 2026-09-15 and needs **only `PCB_W`**; that one number blocks the
-detector plate and nothing else. (An earlier version of this line claimed the whole
-board was unmeasured. It was quoting a stale memory file rather than the source.)
+writer, written with `python -m components measure`. `as7341_breakout` is
+fully calipered as of 2026-09-17 and the detector plate builds. (Two earlier versions
+of this line claimed otherwise, each quoting a memory file rather than the source.
+Read `components/as7341_breakout.py`; do not read this line for measurement state.)

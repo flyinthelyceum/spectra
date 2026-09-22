@@ -277,3 +277,36 @@ the repo, and `km.py`'s drawdown solve is the answer to it.
 time belongs in the model as a series. Both fading (Hiler) and coating chemistry
 (Okumura's UV stabiliser shifting 360–450nm) say a reading is a point in time, not
 a permanent fact. The `date` field exists; nothing consumes it as a series.
+
+## 2026-09-22 — three rulings from Jared, and one stale claim retired
+
+**The first run measures matte black PLA prints, not paint-outs.** Jared: "skip
+paint out on the first run. we can get good data from matte black pla prints." A
+printed chip is flat, opaque, pressable and light-sealed at the port, which is the
+whole envelope the head asks for, and it exists the day the head does. So Stage 1a's
+repeatability and ladder rows run on printed chips and Color-aid, and the first
+`paint` reading moves to 1c+. Consequence: **the cure interval no longer gates the
+head print.** It still has to be fixed before the first paint-out, for the same
+reason as before, and it stays in the known holes as deferred rather than open.
+
+**The measured Color-aid table is public.** Jared: "public whenever possible. I like
+the idea of community work even if I never do it." The 314-row table goes in this
+repo when it exists. Color-aid's booklet asserts rights over the collection and
+objects to cross-referencing; his measurements are facts about objects he owns, and
+the table cites the collection rather than reproducing it. Decided before the table
+exists, which is when it was cheapest.
+
+**The LED part is being specified from datasheets.** `LED_HALF_ANGLE = 15` in
+`spectra/cad/params.py` is still an ESTIMATE about a part not yet chosen. A
+datasheet sweep across the seven wavelengths and white is in progress; the number
+hardens to a datasheet figure, and the 8/15/30 sweep in the viewer is re-run
+against it, before anything is printed.
+
+**`as7341_breakout.PCB_W` was calipered on 2026-09-17** (`PCB_W = 17.78  # CALIPER
+2026-09-17 JR` in `components/as7341_breakout.py`). `plate.missing()` returns an
+empty list, `detector_plate()` builds, and `tests/test_cad.py:134` skips itself with
+"board is fully measured; nothing to gate." Four documents in this repo, the memory
+file and the Todoist task all still said it was the one missing number. They were
+quoting each other. Retired in this commit; the source of truth for measurement
+state is the components repo and nothing here.
+
