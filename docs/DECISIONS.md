@@ -277,3 +277,83 @@ the repo, and `km.py`'s drawdown solve is the answer to it.
 time belongs in the model as a series. Both fading (Hiler) and coating chemistry
 (Okumura's UV stabiliser shifting 360–450nm) say a reading is a point in time, not
 a permanent fact. The `date` field exists; nothing consumes it as a series.
+
+## 2026-09-30 — case concepts, as massing
+
+Jared asked what CAD and rendering could mock up a case, with the Nix as the only
+reference. `docs/CASE.md` holds the research and `spectra/cad/case.py` draws three
+massing studies (puck, torch, palm) around the real head and the measured boards.
+
+**Lane note.** The 09-17 release covered the head CAD. A case is the same spine and
+costs nothing physical, and Jared asked for it directly, so it proceeds on the same
+footing. Nothing was printed or ordered. The draft print that would answer grip
+and size is a print, and waits for the reopen.
+
+**The Nix is not the right reference.** The Datacolor ColorReader Spectro is an
+8-channel 45/0 instrument with a small port, which is Stage 1 almost exactly, and
+it is a torch. The Nix is a 31-channel device whose head is smaller than ours.
+
+**Not ruled here:** the form, the controller board (the DevKitC-1 is what makes the
+puck 74.5 mm across), the battery (none is on the BOM), and whether the PTFE tile
+and light trap become a dock the instrument parks on.
+
+## 2026-09-30 (later) — the puck, and two things fitting it turned up
+
+Jared narrowed the case to the puck or the palm and asked for help choosing. The
+puck was taken forward because a press on its top goes straight down the optical
+axis, it seats on anything the lip covers, and it parks on a round dock. Reasons in
+full in `docs/CASE.md`. `spectra/cad/puck.py` is version one: base, plate with ears,
+board tray, lid, four M3 and three M2 screws.
+
+**The detector plate was never fastened to anything.** It sat on the head's rim
+and the drawing implied it stayed there. The head now carries three M2 heat-set
+inserts in that rim, midway between LEDs, and the plate is screwed down. This is
+a head change made for the case's sake, and it would have been needed without one.
+
+**The plate sat on the LED leads.** The bores are aimed at the port, climb at 45
+degrees, and break out of the head's wall just under the rim. The leads come out
+underneath the plate. The plate is now notched at every LED against
+`head.lead_keepouts()`, and a test holds it. Nobody would have seen this until
+the first LED was soldered.
+
+**The foot stands 0.4 mm clear of the port face on purpose.** Coplanar would make
+the foot share the stop with the port land. Relieved, the port land is the only
+stop, and the foot touches down after 0.67 degrees of tilt, inside the ruled ±2.
+
+Nothing printed or ordered. The draft print waits for the lane.
+
+**Later the same day: bare board.** Jared has DevKitC-1s with and without headers
+soldered and asked to design for the best case. The tray now holds a headerless
+board by its four corners, the long edges open underneath for soldering, and
+the lid drops from 48.0 to 44.8 mm. A headered board no longer fits v1.
+
+## 2026-10-01 — the puck takes the red team's three no-new-parts changes
+
+The dock thread red-teamed the puck and Jared chose "All three" on its decision
+card. Screws now drive up from the foot into inserts in the lid's bosses, so the
+top is unbroken. The seam moved to the rim: one wall from foot to rim, the lid a
+flat disc. The USB opening fits one plug, at the native receptacle, and the
+panel-mount bulkhead rule is broken there on purpose because the only bulkhead in
+the library does not fit. Sealing the LED backs is now ruled in
+`OPTICAL_HEAD.md`: the bores open into the case, so without it the case is part of
+the optics, which nobody decided. The smoked acrylic top was not chosen.
+
+**Later the same day: second red team.** The round-one claim that sealed LEDs make
+the head light-tight by itself overclaimed: only the LED end is sealed, the
+detector end has no ruled seal, and the board's own LEDs are inside the case.
+`OPTICAL_HEAD.md` now says it is unproven until a Stage 1a dark test with a torch
+at the USB opening. `CASE.md` gained the upside-down assembly order and a firmware
+rule: USB-Serial-JTAG for the host link, never TinyUSB, so the enclosed buttons
+are never needed. Reasoning in `red-team-2.md` in the project files.
+
+**Later the same day: fasteners fasten, they do not index.** Jared's rule, in the
+dock thread: "the lid to body joint should align without bolts." Before this the
+screws clocked the lid, located the tray on its posts, and located the plate on
+the head. Now the lid lands on the rim's step, 0.5 mm proud (Jared chose "Proud
+0.5" on the dock thread's card), centred by the rebate and clocked by one hidden
+key; spigots on the posts locate the plate and tray; a keyed spigot ring under
+the plate locates the head. Screw holes widened (M3 3.6, M2 2.6) so no screw
+touches a wall at any joint's full play, and crush ribs under the lid bosses
+absorb the stack now that the rim sets the lid's height. `puck.check()` asserts
+each of these.
+

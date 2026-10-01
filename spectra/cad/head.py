@@ -18,9 +18,91 @@ import math
 
 from build123d import Align, Cylinder, Part, Pos, Rot
 
+from components import heatset_insert_m2x4 as M2
+
 from . import params as P
 
 _MIN = (Align.CENTER, Align.CENTER, Align.MIN)
+
+# ------------------------------------------------- fastening the plate on --
+
+INSERT_INTERFERENCE = 0.4
+"""CHOSEN. Diametral interference of a heat-set pilot against the insert's
+knurl OD, in the middle of the 0.30-0.50 mm the components library gives for
+these inserts. Sized from OD, never from the vendor's label."""
+
+PLATE_SCREW_N = 3
+"""CHOSEN. Three M2 screws hold the detector plate down on the head's top rim.
+Three define a plane; a fourth would only fight it. Until these existed nothing
+held the plate on at all, which is nothing holding the detector square to the
+collection axis."""
+
+PLATE_SCREW_R = (P.LED_RING_R + P.BODY_OD / 2) / 2
+"""DERIVED. Middle of the solid rim between the cavity wall and the outside."""
+
+PLATE_SCREW_CLEAR_D = 2.6
+"""CHOSEN. Clearance hole for M2 through the plate: 0.3 mm a side, more than the
+plate's spigot lets it move (see `plate.spigot_play_at()`), so the screws clamp
+the plate and never locate it. Jared, 2026-10-01: fasteners fasten, they do not
+index."""
+
+
+def plate_screw_angles() -> list[float]:
+    """Where the plate screws go: each exactly midway between two LEDs.
+
+    Midway is the farthest any point on the rim can be from an LED bore, and
+    the bores break out through this same rim. Spread as evenly as the LED
+    count allows.
+    """
+    step = 360.0 / P.LED_N
+    picks = sorted({round(i * P.LED_N / PLATE_SCREW_N) % P.LED_N for i in range(PLATE_SCREW_N)})
+    return [step * (k + 0.5) for k in picks]
+
+
+def plate_screw_positions() -> list[tuple[float, float]]:
+    return [
+        (PLATE_SCREW_R * math.cos(math.radians(a)), PLATE_SCREW_R * math.sin(math.radians(a)))
+        for a in plate_screw_angles()
+    ]
+
+
+# ------------------------------------------------------------ the LED leads --
+
+LEAD_ROOM = 8.0
+"""CHOSEN. How far an LED's leads and their solder joints stand out of the head
+along the bore axis. Nothing mounted on or around the head may occupy it."""
+
+LEAD_R = 2.0
+"""CHOSEN. Radius of the keepout around each LED's lead axis."""
+
+
+def lead_keepouts() -> Part:
+    """The space each LED's leads occupy outside the head, along its bore.
+
+    The bores are aimed at the port, so they climb at 45 degrees and break out
+    of the head's wall just under its top rim. The leads therefore come out
+    beneath whatever sits on the rim. That is the detector plate, and it
+    is why the plate is notched at every LED.
+    """
+    tool = None
+    start_z = P.LED_Z + (P.BODY_OD / 2 - P.LED_RING_R)
+    for i in range(P.LED_N):
+        a = 360.0 * i / P.LED_N
+        k = (Rot(0, 0, a) * Pos(P.BODY_OD / 2, 0, start_z) * Rot(0, P.ILLUM_ANGLE, 0)
+             * Cylinder(LEAD_R, LEAD_ROOM, align=_MIN))
+        tool = k if tool is None else tool + k
+    return tool
+
+
+def _plate_insert_pilots() -> Part:
+    """Heat-set pilots for the plate screws, down into the rim from the top."""
+    depth = M2.LENGTH + 0.5
+    r = (M2.OD - INSERT_INTERFERENCE) / 2
+    tool = None
+    for x, y in plate_screw_positions():
+        pilot = Pos(x, y, P.BODY_H - depth) * Cylinder(r, depth + 1.0, align=_MIN)
+        tool = pilot if tool is None else tool + pilot
+    return tool
 
 
 def _led_bore_length() -> float:
@@ -118,8 +200,9 @@ def body() -> Part:
     )
     part = part - Pos(0, 0, -1.0) * Cylinder(P.PORT_D / 2, P.FLOOR_T + 2.0, align=_MIN)
 
-    # The LED bores.
+    # The LED bores, and the pilots the plate's inserts melt into.
     part = part - _led_bores()
+    part = part - _plate_insert_pilots()
 
     # The compliant lip: a thin ring standing proud of the port face, printed
     # as part of the same solid. It is BELOW z = 0, which is deliberate — the

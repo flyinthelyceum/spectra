@@ -17,6 +17,7 @@ variable amount of white, and no amount of calibration recovers it.
 | Interior | Matte black, printed, no gloss | Every internal reflection adds an unmeasurable flare term |
 | Standoff | Fixed and hard-stopped, no user adjustment | Distance and signal are the same number to a detector; anything adjustable becomes an error source |
 | Light seal | Compliant lip at the port | Room light at the port is the largest single error in a home-built head |
+| LED backs | Sealed with black heat-shrink or black silicone | A clear LED's epoxy is translucent and its bore opens to the outside of the head. Unsealed, light reaching the LED's back from wherever the head is mounted leaks into the cavity, and the black reading moves with the room. Sealing closes the LED end only. The detector end, where the AS7341 breakout meets the plate, has no ruled seal, and the board's own power and RGB LEDs sit inside the case, so whether the case is still part of the optics is unproven until a Stage 1a dark test with a torch held at the USB opening |
 | Material | Black PETG, port face down on the bed | The one surface that must seat flat is the one printed against the bed |
 
 Chamfers are cut with rotated box cutters rather than kernel fillets, and each half

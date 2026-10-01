@@ -226,3 +226,106 @@ class TestViewer:
         # render_html() asserts this exact tag before inlining. If the template's
         # tag drifts, inlining silently no-ops and the page needs a network.
         assert viewer.THREE_TAG in template
+
+
+# ---------------------------------------------------------- the case concepts --
+
+class TestCaseConcepts:
+    """Massing models, but the two rules they inherit from the head are real."""
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_every_concept_holds_its_checks(self, form):
+        b123d("build123d")
+        from spectra.cad import case
+
+        failed = [(n, d) for n, ok, d in case.check(form) if not ok]
+        assert not failed, failed
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_the_port_lip_still_touches_the_sample_first(self, form):
+        # The case may be coplanar with the port face but never below it, so the
+        # compliant lip is the lowest thing on the instrument whatever the case.
+        b123d("build123d")
+        from spectra.cad import case, head
+
+        lowest_case = min(s.bounding_box().min.Z for _, s in case.placed(form))
+        assert head.body().bounding_box().min.Z < lowest_case
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_materials_cover_each_concept_exactly(self, form, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", form)
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+    def test_an_unknown_concept_is_refused_rather_than_drawn_bare(self, monkeypatch):
+        b123d("build123d")
+        from spectra.cad import case
+
+        monkeypatch.setenv("SPECTRA_CASE", "brick")
+        with pytest.raises(ValueError):
+            case.form()
+
+
+# ---------------------------------------------------------------- the puck --
+
+class TestPuck:
+    """The detailed case. Every check in puck.check() is a property the design
+    exists to hold, so the test is that all of them hold."""
+
+    def test_every_puck_check_holds(self):
+        b123d("build123d")
+        from spectra.cad import puck
+
+        failed = [(n, d) for n, ok, d in puck.check() if not ok]
+        assert not failed, failed
+
+    def test_port_land_is_the_only_stop_and_the_foot_caps_tilt(self):
+        # The foot is relieved above the port face, and by little enough that it
+        # touches down before the head leaves the ruled angle tolerance.
+        b123d("build123d")
+        from spectra.cad import puck
+
+        assert puck.FOOT_RELIEF > 0
+        lever = puck.R_OUT - P.PORT_LAND_OD / 2
+        assert math.degrees(math.atan2(puck.FOOT_RELIEF, lever)) < P.ILLUM_ANGLE_TOL
+
+    def test_posts_sit_midway_between_leds(self):
+        b123d("build123d")
+        from spectra.cad import puck
+
+        step = 360.0 / P.LED_N
+        for a in puck.post_angles():
+            assert math.isclose((a / step) % 1.0, 0.5)
+
+    def test_plate_screws_miss_the_led_bores(self):
+        b123d("build123d")
+        from spectra.cad import head
+
+        hit = head._plate_insert_pilots() & head._led_bores()
+        assert hit is None or sum(s.volume for s in hit.solids()) < 1e-6
+
+    def test_plain_plate_leaves_the_led_leads_room(self):
+        # Found while fitting the case: the bores break out just under the rim,
+        # so an un-notched plate sits on the leads.
+        b123d("build123d")
+        from build123d import Pos
+
+        from spectra.cad import head, plate
+
+        hit = (Pos(0, 0, P.PLATE_Z) * plate.detector_plate()) & head.lead_keepouts()
+        assert hit is None or sum(s.volume for s in hit.solids()) < 1e-6
+
+    def test_materials_cover_the_puck_exactly(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()

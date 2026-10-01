@@ -17,6 +17,9 @@ budgeted.
 | Drawdown bar | $30–60 | 1 | Thickness never has to be known, only repeated. One bar, every film. |
 | Titanium white, artist grade | ~$20 | 1 | For tints as a check on prediction; one tube, consistent across every measurement |
 | Digital scale, 0.01 g | $20–30 | 1 | Ratios by mass. Mixing by eye makes the model meaningless. |
+| Heat-set inserts, M3x6 ×4 and M2x4 ×3 | in hand | 1 | Puck posts and the head's rim. Dimensions in the components library |
+| M3 socket head screws ×4, M2 ×3 | ~$5 | 1 | M3x35, driven up from the foot (`python -m spectra.cad.puck` prints the working range); M2x6 |
+| Black heat-shrink, ~4 mm | ~$3 | 1 | Over the back of each LED. Clear LED epoxy passes light into the head otherwise. `OPTICAL_HEAD.md` |
 | Hamamatsu C12880MA | ~$200 | 2 | Only after the gap is measured |
 | ADC and clean analogue front end | $20–40 | 2 | The C12880MA's readout deserves better than a bare GPIO |
 
