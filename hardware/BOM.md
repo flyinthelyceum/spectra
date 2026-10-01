@@ -8,7 +8,7 @@ budgeted.
 | AS7341 breakout | in hand | 1 | Its own board out of back stock, not the one cased on the station. Shared hardware means unmounting, re-seating and re-calibrating between sessions, and a calibration that has to be redone before every use quietly stops being done. |
 | ESP32 | in hand | 1 | |
 | PETG, black | in hand | 1 | Head, detector plate, light trap |
-| Sintered PTFE white tile | $40–80 | 1 | The one part not worth improvising |
+| Sintered PTFE white tile | $40–80 | 1 | The one part not worth improvising. Buy the thickest offered, 7 mm or more: thinner PTFE is translucent and reads its backing (`docs/DOCK.md`). The dock follows its thickness |
 | Narrowband LEDs, 7 wavelengths | $15–25 | 1 | 405 / 450 / 505 / 530 / 590 / 625 / 660 nm, a few of each |
 | Constant-current LED driver or MOSFET array | $10–20 | 1 | Constant current: brightness must not drift with supply |
 | ColorChecker Classic | $70–100 | 1 | Shared with the scanner workflow, not an extra. Gates acceptance in both repos. |

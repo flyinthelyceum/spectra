@@ -258,7 +258,6 @@ the lit spot."""
 
 TRAP_MOUTH_D = PORT_D + 2.0
 TRAP_OD = TRAP_MOUTH_D + 2 * TRAP_WALL
-TILE_HOLDER_OD = TILE_D + 2 * TRAP_WALL
 """DERIVED."""
 
 

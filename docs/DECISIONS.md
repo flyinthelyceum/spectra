@@ -327,6 +327,38 @@ soldered and asked to design for the best case. The tray now holds a headerless
 board by its four corners, the long edges open underneath for soldering, and
 the lid drops from 48.0 to 44.8 mm. A headered board no longer fits v1.
 
+## 2026-09-30 — the calibration dock
+
+Jared asked for the dock that goes with the puck. `docs/DOCK.md` has the research
+and the reasoning; the rulings are these.
+
+**Two fixed cups, not a dial.** The ColorMunki puts its tile on a rotating dial.
+A dial is a mechanism bought to save one lift of the puck; two cups have nothing
+to wear. (This entry first said a dial would put the tile's height on a detent.
+It would not: a turntable's height is set by its floor. Corrected the same day
+by the red team, `docs/DOCK.md`.) The puck parks on the white, which keeps the tile
+covered, as Konica Minolta's own manuals insist.
+
+**The lip is given nowhere to land in the dock.** Nobody presses a docked puck,
+and a lip standing on the dock would hold the port face off the tile. The station
+floors are sunk below the lip's reach and the cup keeps the light out instead. The
+lip sits outside the port face, so leaving it uncrushed is optically nothing.
+
+**One stop per station, as on the puck.** The tile stands 0.3 mm proud of its
+pedestal so the PTFE is the only thing the head touches; the trap's stop is its
+own wall. The dock bores `trap.cavity()` rather than a second cone.
+
+**Buy a thick tile.** Labsphere gives 7 mm as the minimum Spectralon thickness for
+full reflectance; `TILE_T` estimates 3. A thin tile reads its backing, so the
+pocket floor behind it is part of the reference and never changes. The BOM line
+now says so, before the purchase rather than after it.
+
+**Lane.** CAD only, under the head-CAD release. Nothing printed or bought.
+
+**Subtracted, same day.** The standalone printed light trap and the separate
+tile holder in `trap.py` predate the dock and do the dock's job worse. Both were
+deleted, with their viewer materials and the loose staging beside the head.
+`trap.py` keeps the cone and the tile, which is what the dock is built from.
 ## 2026-10-01 — the puck takes the red team's three no-new-parts changes
 
 The dock thread red-teamed the puck and Jared chose "All three" on its decision
@@ -337,6 +369,10 @@ panel-mount bulkhead rule is broken there on purpose because the only bulkhead i
 the library does not fit. Sealing the LED backs is now ruled in
 `OPTICAL_HEAD.md`: the bores open into the case, so without it the case is part of
 the optics, which nobody decided. The smoked acrylic top was not chosen.
+
+**The rim stays at 16 mm.** With the puck's seam moved to its top edge, the
+cup rim is the only horizontal line on a docked puck, so it was not raised to
+hide a seam (red team finding C). It clears the narrowed USB opening by 18.75 mm.
 
 **Later the same day: second red team.** The round-one claim that sealed LEDs make
 the head light-tight by itself overclaimed: only the LED end is sealed, the
@@ -356,4 +392,3 @@ the plate locates the head. Screw holes widened (M3 3.6, M2 2.6) so no screw
 touches a wall at any joint's full play, and crush ribs under the lid bosses
 absorb the stack now that the rim sets the lid's height. `puck.check()` asserts
 each of these.
-

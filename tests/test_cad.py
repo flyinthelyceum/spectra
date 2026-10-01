@@ -90,7 +90,7 @@ class TestSolids:
         b123d("build123d")
         from spectra.cad import trap
 
-        for part in (trap.light_trap(), trap.tile_holder(), trap.ptfe_tile()):
+        for part in (trap.cavity(), trap.ptfe_tile()):
             assert len(part.solids()) == 1
 
     def test_head_port_face_is_the_datum(self):
@@ -121,7 +121,7 @@ class TestComponentsBoundary:
 
         names = {n for n, _ in assembly.all_placed()}
         assert "head_body" in names
-        assert "light_trap" in names
+        assert "sample_card" in names
         if plate.available():
             assert "detector_plate" in names
         else:
@@ -329,3 +329,88 @@ class TestPuck:
         gated = set(assembly.omitted_families())
         assert set(viewer.MATERIALS) == built | gated
         assert built & gated == set()
+
+
+# ------------------------------------------------------ the calibration dock --
+
+class TestDock:
+    """The dock presents each standard to the port exactly as a sample would
+    be presented: port face on the standard, nothing else touching, square
+    inside the ruled tolerance. Every check in dock.check() is one of those."""
+
+    def test_every_dock_check_holds(self):
+        b123d("build123d")
+        from spectra.cad import dock
+
+        failed = [(n, d) for n, ok, d in dock.check() if not ok]
+        assert not failed, failed
+
+    def test_the_lip_never_carries_the_puck(self):
+        # Nobody presses in the dock, so a lip that landed would hold the port
+        # off the standard. The floor must sit below the lip's reach.
+        b123d("build123d")
+        from spectra.cad import dock
+
+        assert dock.WELL_DEPTH > P.LIP_PROUD
+        assert P.LIP_ID / 2 - dock.CUP_CLEAR > max(dock.TILE_PEDESTAL_R, dock.TRAP_LAND_R)
+
+    def test_off_centre_seating_keeps_the_port_on_its_standard(self):
+        b123d("build123d")
+        from spectra.cad import dock
+
+        worst = P.PORT_D / 2 + dock.CUP_CLEAR
+        assert worst < P.TILE_D / 2
+        assert worst < P.TRAP_MOUTH_D / 2
+
+    def test_a_thin_tile_is_caught_by_the_check_not_the_printer(self, monkeypatch):
+        # A tile face below its pedestal is two stops, and the check must say so.
+        b123d("build123d")
+        from spectra.cad import dock
+
+        monkeypatch.setattr(dock, "TILE_PROUD", -0.2)
+        failed = {n for n, ok, _ in dock.check() if not ok}
+        assert "white: the tile is the only stop" in failed
+
+    def test_the_cup_follows_the_puck(self):
+        b123d("build123d")
+        from spectra.cad import dock, puck
+
+        assert dock.R_CUP > puck.R_OUT
+        assert dock.PITCH >= 2 * dock.R_CUP + dock.DOCK_WALL - 1e-9
+
+    def test_the_dock_trap_is_the_standalone_trap(self):
+        # One cone, shared: the dock bores trap.cavity() rather than its own.
+        b123d("build123d")
+        from spectra.cad import trap
+
+        from build123d import Pos
+
+        from spectra.cad import dock
+
+        c = trap.cavity()
+        bb = c.bounding_box()
+        assert bb.max.Z == pytest.approx(0.0, abs=1e-6)
+        assert bb.min.Z == pytest.approx(-P.TRAP_L, abs=1e-6)
+        # Nothing of the dock stands inside the cone at the trap station.
+        hit = dock.body() & (Pos(dock.PITCH, 0, 0) * c)
+        assert hit is None or sum(s.volume for s in hit.solids()) < 1e-6
+
+    @pytest.mark.parametrize("where", ["white", "trap"])
+    def test_materials_cover_the_docked_puck_exactly(self, where, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        monkeypatch.setenv("SPECTRA_DOCK", where)
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+    def test_an_unknown_station_is_refused(self, monkeypatch):
+        b123d("build123d")
+        from spectra.cad import dock
+
+        monkeypatch.setenv("SPECTRA_DOCK", "grey")
+        with pytest.raises(ValueError):
+            dock.station()
