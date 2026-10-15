@@ -24,15 +24,20 @@ The driver's VCC stays unconnected: Adafruit's wiring for 3.3 V logic is V+ at 4
 17 V and VCC left open, so the chip runs from its own regulator and reads the ESP32's
 3.3 V clock and data cleanly. Eight LEDs at 15 mA is 120 mA, well inside a USB port.
 
-**The 5V pin is dead until the USB-OTG pads are bridged.** On the boards in hand, the
-port marked USB powers the ESP32 but does not reach the 5V header pin. Two solder pads
-on the back of the board, marked USB-OTG, connect the two, and they ship open. Found
-on the bench on 2026-10-08: the sensor answered and every command returned OK, but no
-LED lit on any of the twelve channels. 3V3 read 3.3 V while 5V read near zero, with a
-cable in COM as well. The driver had no power, and an unpowered TLC59711 takes its
-data without complaint and lights nothing. The pads are now bridged on the headered
-bench board. The bare board that goes in the puck needs the same bridge before it is
-closed in.
+**The 5V pin is dead until the IN-OUT pads are bridged.** The boards in hand are a
+DevKitC-1 clone (N16R8 module, the pin is labelled **5Vin**). A diode lets 5Vin feed
+the board but blocks USB power from coming out of it. Two solder pads on the front,
+marked **IN-OUT** with an arrow, beside the three small diodes at pins 11 and 12,
+bypass that diode, and they ship open. Found on the bench on 2026-10-08: the sensor
+answered and every command returned OK, but no LED lit on any of the twelve
+channels. 3V3 read 3.3 V while 5V read near zero. The driver had no power, and an
+unpowered TLC59711 takes its data without complaint and lights nothing.
+
+**Not the USB-OTG pads on the back.** Those send the board's 5 V out to the USB port
+for host mode and do nothing for the header pin. They were bridged first, by mistake;
+5Vin still read 0.3 V with 5 V on both pads. IN-OUT bridged on 2026-10-15 put 4.67 V
+on the driver's V+. The bare board that goes in the puck needs the same bridge before
+it is closed in.
 
 Bridged, the 5V pin is wired straight to the computer's USB power. Power the board
 from its USB cable only, never also from a supply on the 5V pin, or that supply drives
@@ -78,8 +83,19 @@ On the computer, from this repo with `pip install -e '.[capture]'`:
 python -c "from spectra.capture import serial_hw as s; S, L = s.connect('auto'); print(S.read())"
 ```
 
-Ten counts printed means the cable, the firmware and the sensor all work. Then light
-channel 0 only, to find which output that is before any LED goes in the head:
+Ten counts printed means the cable, the firmware and the sensor all work.
+
+**Channel numbers run backwards against the driver's silkscreen.** The library's
+channel 0 is the last output group, checked on the bench on 2026-10-15 (an LED on R3
+lit on channel 0 and not on 9):
+
+| channel | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| output | R3 | G3 | B3 | R2 | G2 | B2 | R1 | G1 | B1 | R0 | G0 | B0 |
+
+Only R3 = 0 was lit on the bench; the rest of the row follows from the library
+source (`set_channel` and the chip's B3-first shift order). Light channel 0 alone
+before any LED goes in the head:
 
 ```sh
 python -c "from spectra.capture import serial_hw as s; S, L = s.connect('auto'); L.set(0, 1.0); input('Enter for off '); L.off()"

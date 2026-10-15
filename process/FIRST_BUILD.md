@@ -64,16 +64,17 @@ and the two checks are in `firmware/circuitpython/README.md`. The short wiring:
 | nothing | TLC59711 VCC |
 
 Before any LED goes near the head, prove which output is channel 0 (the README's
-second check), because the white must sit in the bore that channel lights and the
+second check; on the bench it is R3, the numbering runs backwards), because the white must sit in the bore that channel lights and the
 driver's silkscreen groups outputs as R/G/B triples rather than numbering them.
 
 Four more things:
 
-- **Bridge the ESP32's USB-OTG pads first.** Two pads on the back of the board, open
+- **Bridge the ESP32's IN-OUT pads first** (front, beside the diodes at pins 11
+  and 12; not the USB-OTG pads on the back, which were the wrong guess). Open
   as shipped. Without the bridge the port marked USB powers the ESP32 but not its 5V
   pin, so the driver gets no power, and the only symptom is LEDs that never light
-  while every command returns OK. Found on 2026-10-08 and bridged on the bench
-  board; the bare puck board needs it too. `firmware/circuitpython/README.md` has
+  while every command returns OK. Found on 2026-10-08, fixed on the bench board
+  2026-10-15; the bare puck board needs it too. `firmware/circuitpython/README.md` has
   the detail and the one caution it brings.
 - **The TLC59711 sinks.** LED anodes go to the board's V+, cathodes to the channel
   outputs. The Adafruit 1455 sets every channel to about 15 mA with an on-board
