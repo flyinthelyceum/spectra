@@ -54,19 +54,21 @@ firmware/circuitpython/flash.sh
 It reads the chip's flash and PSRAM with esptool and picks the matching
 CircuitPython build. It flashes the board and tells you to move the cable to the
 port marked **USB** (the port the puck's opening is cut for). Then it copies
-`boot.py` and `code.py` onto the CIRCUITPY drive, installs `adafruit_as7341` and
-`adafruit_tlc59711` with circup, and asks for one press of RST, because `boot.py`
-only takes effect after a reset. It ends by asking the board for `ID` and one `READ`.
+`code.py` onto the CIRCUITPY drive, installs `adafruit_as7341` and
+`adafruit_tlc59711` with circup, and asks for one press of RST so `code.py` starts
+with its drivers in place. It ends by asking the board for `ID` and one `READ`.
 `--no-flash` redoes only the files and drivers. Its tools live in `~/.venvs/esp`.
 
 If esptool cannot reach the chip, close anything holding the port (a browser tab
 counts). If it still can't, hold BOOT, tap RST, release BOOT, and run it again.
 
-**The console is on the port marked COM.** The
-ESP32-S3 runs out of USB endpoints with two serial channels and the drive at once.
-CircuitPython 10.3 then boots into safe mode, even with MIDI and HID off. So
-`boot.py` turns the USB console off, and the REPL and tracebacks are on the port
-marked **COM**, at 115200.
+**The bridge answers on the console, on the port marked USB.** There is no
+`boot.py`. On macOS (2026-10-15) every USB setup that enabled CircuitPython's
+separate data channel enumerated but was never configured, so no serial port
+appeared; with two serial channels and the drive the S3 also runs out of endpoints
+and boots into safe mode. The default setup (console + drive) works, so `code.py`
+reads commands on the console and turns auto-reload off, so a save to the drive
+cannot print into a reading. The port marked **COM** carries only the ROM boot log.
 
 ## Checking it
 
@@ -83,8 +85,8 @@ channel 0 only, to find which output that is before any LED goes in the head:
 python -c "from spectra.capture import serial_hw as s; S, L = s.connect('auto'); L.set(0, 1.0); input('Enter for off '); L.off()"
 ```
 
-If it says the hardware was not found, the console on the port marked COM, at
-115200, prints the exact error from the board.
+If it says the hardware was not found, open the port marked USB at 115200 and
+press Ctrl-D: the board reboots and prints the exact error.
 
 ## What it does not do
 

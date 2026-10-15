@@ -8,14 +8,14 @@
 # Start with the cable in the port marked COM. The script reads the chip's flash and
 # PSRAM with esptool, picks the matching CircuitPython build, flashes it, then asks
 # for the one physical step: move the cable to the port marked USB. It copies
-# boot.py and code.py onto CIRCUITPY, installs the two drivers with circup, and
+# code.py onto CIRCUITPY, installs the two drivers with circup, and
 # after a press of RST asks the board for ID and one READ.
 #
 # First run on 2026-10-05, Jared's board: ESP32-S3 rev 0.2, 16 MB flash, 8 MB PSRAM.
 # There is no N16R8 build, so it took N8R8, which runs on the larger flash.
 set -euo pipefail
 
-CP_VERSION="${CP_VERSION:-10.3.1}"   # boot.py's endpoint budget was checked on this release
+CP_VERSION="${CP_VERSION:-10.3.1}"   # the release the bridge was brought up on, 2026-10-15
 VENV="${SPECTRA_ESP_VENV:-$HOME/.venvs/esp}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PORT=""
@@ -74,10 +74,13 @@ for _ in $(seq 1 120); do
 done
 [ -d "$DRIVE" ] || { echo "no CIRCUITPY drive after 4 minutes; is the cable in the port marked USB?" >&2; exit 1; }
 
-cp "$HERE/boot.py" "$HERE/code.py" "$DRIVE/" && sync
+# No boot.py: the default USB setup (console + drive) is the one macOS configures.
+# A boot.py left from an older flash would bring the data channel back, so it goes.
+rm -f "$DRIVE/boot.py"
+cp "$HERE/code.py" "$DRIVE/" && sync
 "$VENV/bin/circup" --path "$DRIVE" install adafruit_as7341 adafruit_tlc59711
 echo
-echo ">>> Press RST once. boot.py only takes effect after a reset."
+echo ">>> Press RST once, so code.py starts with its drivers in place."
 
 "$VENV/bin/python" - <<'EOF'
 import glob, time
@@ -95,5 +98,5 @@ while time.time() < deadline:
         except (OSError, serial.SerialException):
             pass
     time.sleep(2)
-raise SystemExit("the bridge never answered ID; the console on the COM port, at 115200, shows why")
+raise SystemExit("the bridge never answered ID; open the USB port at 115200 and press Ctrl-D to see why")
 EOF

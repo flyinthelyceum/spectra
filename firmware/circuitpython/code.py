@@ -1,6 +1,6 @@
 """The ESP32 end of Stage 1a: the sensor and the LEDs, answered over USB.
 
-Copy to the CIRCUITPY drive with `boot.py`. Needs `adafruit_as7341` and
+Copy to the CIRCUITPY drive (no `boot.py`). Needs `adafruit_as7341` and
 `adafruit_tlc59711` in `lib/` (`circup install adafruit_as7341 adafruit_tlc59711`).
 
 Why a bridge and not the measurement itself: the dark/white/sample cycle, the
@@ -9,7 +9,7 @@ tested. This file only does what the Pi did through Blinka, so that code runs
 unchanged on the computer at the other end of the cable. Ruled 2026-10-06
 (`docs/DECISIONS.md`).
 
-One line in, one line out, on the data channel `boot.py` enables:
+One line in, one line out, on the USB console:
 
     ID                  -> SPECTRA ESP32 1
     CFG gain atime astep -> OK          gain is the AGAIN code, 0 (0.5x) to 10 (512x)
@@ -155,11 +155,16 @@ def _status_led_off():
 def main():
     import usb_cdc
 
+    import supervisor
+
     _status_led_off()
-    port = usb_cdc.data
-    if port is None:
-        print("No data channel: copy boot.py to CIRCUITPY and press RST.")
-        return
+    # The data channel when boot.py enables one; otherwise the console. On the
+    # MacBook (2026-10-15) any configuration with the data channel enumerated but
+    # was never configured by macOS, so the default USB setup (console + drive) is
+    # the one that works, and the bridge answers on the console. Auto-reload off,
+    # so a save to the drive cannot print a status line into a reading.
+    supervisor.runtime.autoreload = False
+    port = usb_cdc.data or usb_cdc.console
     port.timeout = 0.1
     try:
         head = Head()

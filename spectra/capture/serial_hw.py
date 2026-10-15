@@ -49,6 +49,10 @@ class Link:
 
     def ask(self, line: str, timeout: float = TIMEOUT_S) -> str:
         self._t.timeout = timeout
+        # On the console channel a boot or status line can be waiting; drop it so
+        # it is not read as the reply.
+        if hasattr(self._t, "reset_input_buffer"):
+            self._t.reset_input_buffer()
         self._t.write((line + "\n").encode())
         raw = self._t.readline()
         if not raw.endswith(b"\n"):
@@ -141,8 +145,8 @@ def find_port() -> str:
         finally:
             t.close()
     raise RuntimeError(
-        "no port answered ID. Is the cable in the port marked USB, are boot.py and "
-        "code.py on CIRCUITPY, and was RST pressed after copying boot.py?"
+        "no port answered ID. Is the cable in the port marked USB, is code.py on "
+        "CIRCUITPY with its drivers, and has the board finished booting?"
     )
 
 
