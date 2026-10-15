@@ -22,8 +22,23 @@ The GPIO numbers are printed beside each header pin on the DevKitC-1.
 
 The driver's VCC stays unconnected: Adafruit's wiring for 3.3 V logic is V+ at 4 to
 17 V and VCC left open, so the chip runs from its own regulator and reads the ESP32's
-3.3 V clock and data cleanly. The 5V pin is the USB supply when the board is powered
-over USB; eight LEDs at 15 mA is 120 mA, well inside a USB port.
+3.3 V clock and data cleanly. Eight LEDs at 15 mA is 120 mA, well inside a USB port.
+
+**The 5V pin is dead until the USB-OTG pads are bridged.** On the boards in hand, the
+port marked USB powers the ESP32 but does not reach the 5V header pin. Two solder pads
+on the back of the board, marked USB-OTG, connect the two, and they ship open. Found
+on the bench on 2026-10-08: the sensor answered and every command returned OK, but no
+LED lit on any of the twelve channels. 3V3 read 3.3 V while 5V read near zero, with a
+cable in COM as well. The driver had no power, and an unpowered TLC59711 takes its
+data without complaint and lights nothing. The pads are now bridged on the headered
+bench board. The bare board that goes in the puck needs the same bridge before it is
+closed in.
+
+Bridged, the 5V pin is wired straight to the computer's USB power. Power the board
+from its USB cable only, never also from a supply on the 5V pin, or that supply drives
+current back into the computer's port. The puck is USB-powered, so this costs it
+nothing. The check, if a board is in doubt: 5V to G should read about 5 V with only
+the USB cable in.
 
 LEDs: long leg (anode) to the driver's V+, short leg (cathode) to a channel output.
 No series resistors; the board fixes each channel at about 15 mA.

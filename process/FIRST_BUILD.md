@@ -67,8 +67,14 @@ Before any LED goes near the head, prove which output is channel 0 (the README's
 second check), because the white must sit in the bore that channel lights and the
 driver's silkscreen groups outputs as R/G/B triples rather than numbering them.
 
-Three more things:
+Four more things:
 
+- **Bridge the ESP32's USB-OTG pads first.** Two pads on the back of the board, open
+  as shipped. Without the bridge the port marked USB powers the ESP32 but not its 5V
+  pin, so the driver gets no power, and the only symptom is LEDs that never light
+  while every command returns OK. Found on 2026-10-08 and bridged on the bench
+  board; the bare puck board needs it too. `firmware/circuitpython/README.md` has
+  the detail and the one caution it brings.
 - **The TLC59711 sinks.** LED anodes go to the board's V+, cathodes to the channel
   outputs. The Adafruit 1455 sets every channel to about 15 mA with an on-board
   3.3 kΩ resistor, so **no series resistors**. 5 V on V+ covers every LED in the
