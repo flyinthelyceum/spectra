@@ -54,3 +54,36 @@ warm side (uncorrected for per-channel sensitivity). 8x to 64x scales 7.9x, line
 Peak 7382 of 18000 at 64x, no saturation. Dark near zero on every channel.
 Next: seat the white in the bore channel 0 lights; the other seven LEDs by the table
 in the firmware README.
+
+## 2026-10-16 — all eight LEDs lit, one at a time: seven good, green still dim
+Commit: this one (adds `scripts/ledtest.py`)
+Did: all eight LEDs wired (yellow 590 on ch5 B2, clear-lens red 625 on ch6 R1,
+diffused red 660 on ch7 G1, per the firmware README table). `scripts/ledtest.py`
+on the MacBook: per channel, gain stepped down from 64x until nothing read over 90%
+of full scale, ATIME 29, ASTEP 599, 5 dark and 5 lit reads, level 1.0.
+Saw (lit minus dark; "per 1x" = peak band divided by the gain):
+
+| ch | out | LED | gain | peak | per 1x | f1 | f2 | f3 | f4 | f5 | f6 | f7 | f8 | clear |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | R3 | white C513A | 64x | f7 | 80 | 380 | 1777 | 1219 | 2762 | 4292 | 5056 | 5128 | 2369 | 10585 |
+| 1 | G3 | 400 UV | 32x | f1 | 223 | 7134 | 332 | 211 | 660 | 441 | 475 | 288 | 304 | 15697 |
+| 2 | B3 | 460 blue | 16x | f2 | 588 | 315 | 9410 | 5346 | 426 | 212 | 206 | 278 | 446 | 6605 |
+| 3 | R2 | 501 cyan | 64x | f3 | 216 | 422 | 246 | 13821 | 13185 | 1107 | 316 | 458 | 414 | 9555 |
+| 4 | G2 | 565 green | 64x | f5 | 1 | 1 | 1 | 1 | 7 | 72 | 21 | 4 | 2 | 62 |
+| 5 | B2 | 590 yellow | 64x | f6 | 31 | 35 | 30 | 58 | 38 | 701 | 2001 | 54 | 47 | 1166 |
+| 6 | R1 | 625 red | 32x | f7 | 426 | 359 | 176 | 361 | 678 | 347 | 8034 | 13647 | 634 | 12321 |
+| 7 | G1 | 660 red | 8x | f7 | 902 | 87 | 135 | 172 | 79 | 121 | 300 | 7212 | 1275 | 448 |
+
+Every peak sits in the band its wavelength predicts; no channel saturated; the order
+of the two reds is right (ch6 spills into f6, ch7 into f8).
+- ch4 green: right colour, about 27x down from the same LED at the 10-15 test
+  (72 vs 1652 counts at 64x), now after reseating. The TLC59711 sinks constant
+  current, so a resistive joint would read full or dark, not dim. A dim LED of the
+  right colour points at the LED itself (damaged) or its aim. Next: swap in a fresh
+  WP7113SGC from the bag and rerun `ledtest.py 4`.
+- ch5 yellow: right band but about 14x dimmer per 1x than the 625. Not yet known
+  whether that is the part (datasheet intensity) or aim. Check after the green.
+- ch7 660: f7 is 5.7x f8, which reads closer to 640 than to 660 (the BOM gives 660
+  peak, 640 dominant). Uncorrected for per-band sensitivity; inference, not a
+  measured peak. The C12880MA settles it.
+Next: fresh green, rerun ch4 and ch5, then seat the head.
