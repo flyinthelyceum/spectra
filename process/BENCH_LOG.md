@@ -87,3 +87,20 @@ of the two reds is right (ch6 spills into f6, ch7 into f8).
   peak, 640 dominant). Uncorrected for per-band sensitivity; inference, not a
   measured peak. The C12880MA settles it.
 Next: fresh green, rerun ch4 and ch5, then seat the head.
+
+## 2026-10-16 — the dim green was aim, not the part
+Commit: this one
+Did: fresh WP7113SGC on ch4; `ledtest.py 4 5` read worse (green f5 17 at 64x, yellow
+f6 1137, the yellow untouched since the last run). Then ch4 and ch5 alternated for
+120 s at 64x (ATIME 29, ASTEP 599, ~1.5 s each) while Jared aimed each LED at the
+AS7341 by hand.
+Saw: green f5 17 -> about 1270 once aimed (the same LED read 1652 in the R2 spot on
+10-15); yellow f6 hit full scale (17989) at first, then held about 4490. Steady from
+about 20 s. Over the last 100 s, untouched: green +3% (1247 -> 1285), yellow -1.5%
+(4544 -> 4473): warm-up drift, likely LED temperature.
+The 10-16 diagnosis above ("the LED itself") was wrong. These are 10 degree parts:
+loose on the bench, a small tilt misses the sensor, so per-LED brightness means
+nothing until the head's bores set the aim. The drift says capture needs a warm-up
+or a settle longer than the 0.2 s ESTIMATE before repeat reads.
+Next: seat the eight LEDs in the head, rerun `ledtest.py`, then a drift run per
+channel to size the warm-up.
