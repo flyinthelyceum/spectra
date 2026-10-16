@@ -10,3 +10,6 @@ data/raw/
 # generated viewer output and its download cache
 export/
 .claude/worktrees/
+
+# ledtest.py results (the numbers go in BENCH_LOG)
+ledtest-*.json

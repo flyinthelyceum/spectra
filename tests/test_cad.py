@@ -104,6 +104,43 @@ class TestSolids:
         assert bb.max.Z == pytest.approx(P.PLATE_Z, abs=1e-6)
 
 
+class TestBoreCoupon:
+    """The coupon exists to find LED_SEAT_D, so it has to be able to."""
+
+    def test_coupon_is_a_single_solid(self):
+        b123d("build123d")
+        from spectra.cad import coupon
+
+        assert len(coupon.body().solids()) == 1
+
+    def test_the_model_bore_is_one_of_the_bores_tried(self):
+        # A coupon whose range missed the head's own bore could not confirm it.
+        from spectra.cad import coupon
+
+        ds = coupon.diameters()
+        assert ds == sorted(ds)
+        assert ds[0] < P.LED_SEAT_D < ds[-1] or P.LED_SEAT_D in ds
+
+    def test_every_bore_is_open_at_both_faces_and_leans_like_the_head(self):
+        # A blind bore tests nothing, and a vertical one tests a hole the head
+        # does not have. Probe each axis just inside the bed and the top face.
+        b123d("build123d")
+        from build123d import Vector
+
+        from spectra.cad import coupon
+
+        part = coupon.body()
+        for (p, d), dia in zip(coupon.bore_axes(), coupon.diameters()):
+            tilt = math.degrees(math.acos(d[2]))
+            assert tilt == pytest.approx(P.ILLUM_ANGLE)
+            for z in (0.2, coupon.COUPON_H - 0.2):
+                t = z / d[2]
+                at = Vector(p[0] + d[0] * t, p[1] + d[1] * t, z)
+                assert not part.is_inside(at), f"{dia} mm bore closed at z={z}"
+                # And the wall is there just past the bore radius, across the row.
+                assert part.is_inside(at + Vector(dia / 2 + 0.2, 0, 0))
+
+
 # --------------------------------------------------- the components boundary --
 
 class TestComponentsBoundary:

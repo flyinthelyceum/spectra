@@ -18,6 +18,14 @@ cad = [
   "build123d==0.11.1",
   "components @ git+https://github.com/flyinthelyceum/components.git@components-v1",
 ]
+# Stage 1a hardware: an AS7341 sensor and a TLC59711 LED driver, read as plain
+# Python through Blinka. Only installed on the Pi; `spectra/capture/hw.py` imports
+# these lazily so the package still imports without them.
+pi = [
+  "adafruit-blinka>=9.2.0",
+  "adafruit-circuitpython-as7341>=1.2.27",
+  "adafruit-circuitpython-tlc59711>=2.0.20",
+]
 
 [project.urls]
 Source = "https://github.com/flyinthelyceum/spectra"
@@ -27,4 +35,4 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["spectra", "spectra.cad"]
+packages = ["spectra", "spectra.cad", "spectra.capture"]
