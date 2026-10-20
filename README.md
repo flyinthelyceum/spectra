@@ -66,10 +66,12 @@ installed beyond pytest.
 
 ## Where the colour maths lives
 
-The CIE conversions, the CIEDE2000 metric and the scanner profiling workflow were
-built first, in [`flyinthelyceum/grow-lab`](https://github.com/flyinthelyceum/grow-lab)
-under `tools/color/` and `docs/COLOUR_MEASUREMENT` — see that repo's
-`docs/COLOR_MEASUREMENT.md`. They do not belong to a grow lab and they are the
-floor this repo stands on, so moving them here is stage 0: `specs/2026-09-17-colorimetry-extraction.md`.
-Until that lands, nothing here converts a curve to Lab, and nothing here should
-copy code out of grow-lab to pretend otherwise.
+Here, since stage 0. The CIE conversions, the CIEDE2000 metric (asserted against all
+thirty-four Sharma, Wu and Dalal pairs), the CGATS reader, the chart sampler, the
+scanner profile fitter and the scorer were built first in
+[`flyinthelyceum/grow-lab`](https://github.com/flyinthelyceum/grow-lab) under
+`tools/color/` and moved here whole: `spectra/colorimetry.py`, `cgats.py`,
+`sample_chart.py`, `fit_profile.py`, `check_profile.py`, with their tests. grow-lab
+consumes them through its `color` extra and keeps its scanner workflow doc, which
+points here. Run them as `python -m spectra.check_profile` and so on. The move is
+`specs/2026-09-17-colorimetry-extraction.md`.
