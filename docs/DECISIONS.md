@@ -550,9 +550,11 @@ keepout and counterbore radius is `head.LEAD_R` 3.8 (flange, `LED_SEAL_T` 0.6 of
 heat-shrink, 0.3 clearance): the notches clear a sealed back by 0.30 and a bare
 flange by 0.90. Heat-shrink now goes on before the LED goes in.
 
-**The check got more honest.** The old aperture check followed the dome's
-axial rays only as far as the foot of the collection tube, so it could not see
-the port floor and never followed light off the axis. It now follows the axial
+**The check got more honest.** The old aperture check stopped each axial ray
+on a plane square to the bore axis, level with the tube's foot only on the axis
+itself. Rays from the dome's upper edge stopped above 7 mm, short of the tube
+they were about to hit; none reached the port floor; and no light off the axis
+was followed. Run unchanged on this head it reads 0.0%. It now follows the axial
 rays to the sample plane and casts every dome-to-port segment, and names what
 each one hits. Bore, flare and webs take
 0.0% of all of it. Two things past them still do, and are left with numbers:
