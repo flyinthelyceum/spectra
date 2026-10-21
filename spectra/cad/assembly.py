@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 
-from . import head, params as P, plate, trap
+from . import case, head, led, params as P, plate, trap
 
 
 def datums() -> dict[str, float]:
@@ -43,9 +43,12 @@ def all_placed(_datums=None) -> list[tuple[str, object]]:
     from build123d import Pos
 
     out: list[tuple[str, object]] = [("head_body", head.body())]
+    # The eight LEDs, seated where their flanges stop, when SPECTRA_LEDS asks.
+    out.extend(led.placed())
 
     if plate.available():
-        out.append(("detector_plate", Pos(0, 0, P.PLATE_Z) * plate.detector_plate()))
+        if "detector_plate" not in case.replaces():
+            out.append(("detector_plate", Pos(0, 0, P.PLATE_Z) * plate.detector_plate()))
         out.append(("as7341_board",
                     Pos(0, 0, P.PLATE_Z + plate.PLATE_T) * plate.as7341_board()))
 
@@ -65,6 +68,9 @@ def all_placed(_datums=None) -> list[tuple[str, object]]:
                 Pos(-stage_x, 0, -(P.TILE_T + P.TRAP_WALL) - 2.0) * trap.tile_holder()))
     out.append(("ptfe_tile",
                 Pos(-stage_x, 0, -P.TILE_T - 2.0 + P.TRAP_WALL) * trap.ptfe_tile()))
+
+    # A case concept, if SPECTRA_CASE names one. Massing only; see case.py.
+    out.extend(case.placed())
     return out
 
 
@@ -77,11 +83,46 @@ def omitted_families() -> dict[str, str]:
     have to be loosened to a subset check, and a subset check is exactly what
     lets an unlabelled part render as a grey blob.
     """
+    out: dict[str, str] = {}
     gaps = plate.missing()
-    if not gaps:
-        return {}
-    why = f"blocked on {', '.join(gaps)} in the components library"
-    return {"detector_plate": why, "as7341_board": why}
+    if gaps:
+        why = f"blocked on {', '.join(gaps)} in the components library"
+        out.update({"detector_plate": why, "as7341_board": why})
+    for fam in case.replaces():
+        out[fam] = "replaced by the selected case's own version"
+    if not led.shown():
+        out["led"] = "drawn only when SPECTRA_LEDS is set (viewer --head-assembly)"
+    shown = {name for name, _ in case.placed()}
+    for fam in case.FAMILIES:
+        if fam not in shown:
+            out[fam] = "case concept not selected, or this concept has none"
+    return out
+
+
+def access() -> list[dict]:
+    """How each part that goes onto the head gets there, in assembly order.
+
+    One entry per family: ``dir`` is the direction it travels to reach its seat
+    and ``travel_mm`` how far from its seat it starts. The LEDs each travel
+    their own bore, so they carry ``dirs``, one per instance in placement order.
+    The seated position is the model's own placement; these only say where the
+    path into it runs, computed from the same params, the way rays() does for
+    light. Empty unless the LEDs are shown.
+    """
+    if not led.shown():
+        return []
+    out = [{
+        "family": "led", "order": 1, "travel_mm": led.travel(),
+        "dirs": [[-x for x in led.direction(i)] for i in range(P.LED_N)],
+        "note": "dome first down each bore, back sealed, until the flange lands on its shoulder",
+    }]
+    if plate.available():
+        plate_fam = "puck_plate" if "detector_plate" in case.replaces() else "detector_plate"
+        for fam in (plate_fam, "as7341_board"):
+            out.append({"family": fam, "order": 2, "dir": [0.0, 0.0, -1.0],
+                        "travel_mm": led.plate_travel(),
+                        "note": "straight down onto the rim, its notches over the sealed backs"})
+    return out
 
 
 # ------------------------------------------------------------------- optics --

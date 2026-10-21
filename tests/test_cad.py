@@ -12,6 +12,8 @@ tests do not need it and never skip.
 from __future__ import annotations
 
 import math
+import re
+from pathlib import Path
 
 import pytest
 
@@ -226,3 +228,301 @@ class TestViewer:
         # render_html() asserts this exact tag before inlining. If the template's
         # tag drifts, inlining silently no-ops and the page needs a network.
         assert viewer.THREE_TAG in template
+
+
+# ---------------------------------------------------------- the case concepts --
+
+class TestCaseConcepts:
+    """Massing models, but the two rules they inherit from the head are real."""
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_every_concept_holds_its_checks(self, form):
+        b123d("build123d")
+        from spectra.cad import case
+
+        failed = [(n, d) for n, ok, d in case.check(form) if not ok]
+        assert not failed, failed
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_the_port_lip_still_touches_the_sample_first(self, form):
+        # The case may be coplanar with the port face but never below it, so the
+        # compliant lip is the lowest thing on the instrument whatever the case.
+        b123d("build123d")
+        from spectra.cad import case, head
+
+        lowest_case = min(s.bounding_box().min.Z for _, s in case.placed(form))
+        assert head.body().bounding_box().min.Z < lowest_case
+
+    @pytest.mark.parametrize("form", ["puck", "torch", "palm"])
+    def test_materials_cover_each_concept_exactly(self, form, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", form)
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+    def test_an_unknown_concept_is_refused_rather_than_drawn_bare(self, monkeypatch):
+        b123d("build123d")
+        from spectra.cad import case
+
+        monkeypatch.setenv("SPECTRA_CASE", "brick")
+        with pytest.raises(ValueError):
+            case.form()
+
+
+# ---------------------------------------------------------------- the puck --
+
+class TestPuck:
+    """The detailed case. Every check in puck.check() is a property the design
+    exists to hold, so the test is that all of them hold."""
+
+
+    def test_head_prints_without_an_island(self):
+        # Orca, 2026-10-05: port face down, the lip held the port face off the
+        # bed and the collection tube began in mid-air. In its print orientation
+        # every flat face looking down must be either on the bed, a pilot end
+        # small enough to bridge, or the cavity ceiling, which bridges between
+        # walls on every side.
+        b123d("build123d")
+        from spectra.cad import puck
+
+        h = puck.print_ready()["head"]
+        ceiling = None
+        for f in h.faces():
+            if f.normal_at(f.center()).Z < -0.99 and f.center().Z > 0.05:
+                if f.area < 10.0:
+                    continue
+                assert ceiling is None, f"second large downward face at z={f.center().Z:.2f}"
+                ceiling = f
+        assert ceiling is not None
+        assert len(ceiling.inner_wires()) == 1  # the port hole, nothing floating in it
+    def test_every_part_stands_on_the_bed(self):
+        # 2026-10-05: the tray was exported upside down, standing on its
+        # corner pads alone (11 mm^2). Each printed part must put a real area
+        # on the bed in its print orientation.
+        b123d("build123d")
+        from spectra.cad import puck
+
+        for name, part in puck.print_ready().items():
+            on_bed = sum(f.area for f in part.faces()
+                         if abs(f.center().Z) < 0.01 and f.normal_at(f.center()).Z < -0.99)
+            assert on_bed > 50.0, f"{name} touches the bed with {on_bed:.1f} mm^2"
+
+    def test_every_board_on_the_bom_has_a_home(self):
+        # 2026-10-05: puck v1 was drawn round the ESP32, the sensor and the
+        # head, and the LED driver on the BOM had nowhere to go. Every BOM row
+        # that names a board must map to a solid the puck places.
+        b123d("build123d")
+        from spectra.cad import puck
+
+        bom = (Path(__file__).resolve().parent.parent / "hardware" / "BOM.md").read_text()
+        items = [ln.split("|")[1].strip() for ln in bom.splitlines()
+                 if ln.startswith("| ") and not ln.startswith("| Item")]
+        boards = [i for i in items if re.search(r"breakout|ESP32|driver", i, re.I)]
+        assert boards, "no boards found on the BOM; the parse is wrong"
+        missing = [b for b in boards if b not in puck.HOUSED]
+        assert not missing, f"boards with no home in the puck: {missing}"
+        placed = set(puck.parts()) | {"as7341"}
+        for b in boards:
+            name = puck.HOUSED[b]
+            assert any(name in p for p in placed), f"{b} maps to {name}, which the puck never places"
+
+    def test_every_puck_check_holds(self):
+        b123d("build123d")
+        from spectra.cad import puck
+
+        failed = [(n, d) for n, ok, d in puck.check() if not ok]
+        assert not failed, failed
+
+    def test_port_land_is_the_only_stop_and_the_foot_caps_tilt(self):
+        # The foot is relieved above the port face, and by little enough that it
+        # touches down before the head leaves the ruled angle tolerance.
+        b123d("build123d")
+        from spectra.cad import puck
+
+        assert puck.FOOT_RELIEF > 0
+        lever = puck.R_OUT - P.PORT_LAND_OD / 2
+        assert math.degrees(math.atan2(puck.FOOT_RELIEF, lever)) < P.ILLUM_ANGLE_TOL
+
+    def test_posts_sit_midway_between_leds(self):
+        b123d("build123d")
+        from spectra.cad import puck
+
+        step = 360.0 / P.LED_N
+        for a in puck.post_angles():
+            assert math.isclose((a / step) % 1.0, 0.5)
+
+    def test_plate_screws_miss_the_led_bores(self):
+        b123d("build123d")
+        from spectra.cad import head
+
+        hit = head._plate_insert_pilots() & head._led_bores()
+        assert hit is None or sum(s.volume for s in hit.solids()) < 1e-6
+
+    def test_plain_plate_leaves_the_led_leads_room(self):
+        # Found while fitting the case: the bores break out just under the rim,
+        # so an un-notched plate sits on the leads.
+        b123d("build123d")
+        from build123d import Pos
+
+        from spectra.cad import head, plate
+
+        hit = (Pos(0, 0, P.PLATE_Z) * plate.detector_plate()) & head.lead_keepouts()
+        assert hit is None or sum(s.volume for s in hit.solids()) < 1e-6
+
+    def test_lead_keepouts_cover_every_bore_mouth(self):
+        # The keepouts are only as good as where they start. With the 5 mm set
+        # the bores leave through the top face, not the wall, and a keepout that
+        # began at the wall left the plate sitting on every LED's back.
+        b123d("build123d")
+        import math
+
+        from build123d import Vector
+
+        from spectra.cad import head
+
+        keep = head.lead_keepouts()
+        t = head.lead_exit()
+        s, c = math.sin(math.radians(P.ILLUM_ANGLE)), math.cos(math.radians(P.ILLUM_ANGLE))
+        for i in range(P.LED_N):
+            a = math.radians(360.0 * i / P.LED_N)
+            r, z = P.LED_RING_R + t * c, P.LED_Z + t * s
+            assert keep.is_inside(Vector(r * math.cos(a), r * math.sin(a), z))
+
+    def test_materials_cover_the_puck_exactly(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+
+# ------------------------------------------------------- the LEDs going in --
+
+@pytest.fixture(scope="module")
+def led_checks():
+    b123d("build123d")
+    from spectra.cad import led
+
+    return {name: (ok, detail) for name, ok, detail in led.check()}
+
+
+class TestLedInsertion:
+    """How a 5 mm LED reaches its bore, checked against the printed head.
+
+    The lamp is the nominal T-1 3/4 outline (ESTIMATE, see params), so these
+    test the shape of the fit: that a path exists, what stops the lamp, that it
+    stops where the optics assume, and that the plate goes on over it. The
+    shoulder is cut from the same nominal lamp, so the seat test asserts that
+    the head is cut to its own lamp, not a measured depth.
+    """
+
+    def test_materials_cover_the_head_assembly_exactly(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert "led" in built
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+    def test_leds_are_drawn_only_when_asked(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.delenv("SPECTRA_LEDS", raising=False)
+        from spectra.cad import assembly, led
+
+        # Off by default, so every other page and test sees the head it saw
+        # before; the coverage tests above then hold through omitted_families.
+        assert led.placed() == []
+        assert assembly.access() == []
+        assert "led" in assembly.omitted_families()
+
+    def test_every_access_family_is_drawn_and_coloured(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        for a in assembly.access():
+            assert a["family"] in viewer.MATERIALS, a["family"]
+            assert a["family"] in built, a["family"]
+            assert a["travel_mm"] > 0, a["family"]
+
+    def test_each_led_travels_its_own_bore_axis(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly
+
+        (entry,) = [a for a in assembly.access() if a["family"] == "led"]
+        assert len(entry["dirs"]) == P.LED_N
+        for i, d in enumerate(entry["dirs"]):
+            # The LED moves INTO the head along the bore: down at the
+            # illumination angle from vertical, toward the axis, at its own
+            # azimuth on the ring.
+            assert math.isclose(math.hypot(*d), 1.0, abs_tol=1e-9)
+            assert math.isclose(math.degrees(math.acos(-d[2])), P.ILLUM_ANGLE, abs_tol=1e-6)
+            az = math.radians(360.0 * i / P.LED_N)
+            assert d[0] * math.cos(az) + d[1] * math.sin(az) < 0
+
+    def test_every_led_starts_clear_of_the_head(self):
+        b123d("build123d")
+        from spectra.cad import head, led
+
+        # The viewer's travel is derived from an inequality, not tuned by eye;
+        # this is the inequality.
+        body, one = head.body(), led.lamp()
+        for i in range(P.LED_N):
+            start = led.location(i, led.seat(i) + led.travel()) * one
+            assert (body & start).volume < 1e-6, i
+
+    def test_every_led_reaches_its_seat(self, led_checks):
+        ok, detail = led_checks["every LED reaches its seat from outside along its bore"]
+        assert ok, detail
+
+    def test_the_flange_is_what_stops_it(self, led_checks):
+        ok, detail = led_checks["the flange is what stops it"]
+        assert ok, detail
+
+    def test_every_led_seats_where_the_optics_put_it(self, led_checks):
+        # 2026-10-21: the flange stopped on the head's outer top edge, the tip
+        # 3.15 short of the cavity, so every optics number resting on
+        # LED_THROW described a head nobody had built.
+        ok, detail = led_checks["every LED seats where the optics put it"]
+        assert ok, detail
+
+    def test_the_lead_keepout_holds_each_sealed_back(self, led_checks):
+        ok, detail = led_checks["the lead keepout holds each sealed back"]
+        assert ok, detail
+
+    def test_the_plate_notches_clear_the_sealed_leds(self, led_checks):
+        # The notch cleared a bare flange by 0.20 a side, so heat-shrink touched.
+        ok, detail = led_checks["the plate's notches clear the sealed backs and leads"]
+        assert ok, detail
+
+    def test_nothing_round_an_led_stands_in_its_beam(self, led_checks):
+        # Was a strict xfail, found 2026-10-21: each bore was cut from the
+        # emitter point on the cavity wall, which left a wedge of wall across
+        # half its end (53% of the axial light), and web 0 stood in front of
+        # LED 0 (26% more). The bores now flare open into the cavity and the
+        # webs sit between LEDs. What the collection tube and the port's floor
+        # take is reported by led.remaining(), not counted here.
+        ok, detail = led_checks["nothing round an LED stands in its beam"]
+        assert ok, detail
+
+    def test_webs_sit_midway_between_leds(self):
+        b123d("build123d")
+        from spectra.cad import head
+
+        step = 360.0 / P.LED_N
+        for a in head.web_angles():
+            assert math.isclose((a / step) % 1.0, 0.5)

@@ -2,7 +2,8 @@
 
     python -m spectra.cad.head        # build it, report solids and volume
 
-One part, printed port-face-down in black PETG. The lip and the collection tube
+One part, printed top rim down in black PETG, no supports (see
+`puck.print_ready()` for why not port face down). The lip and the collection tube
 are features of that one part rather than separate pieces, because a light seal
 made of two pieces has a joint, and a joint at the port is a light leak.
 
@@ -16,11 +17,137 @@ from __future__ import annotations
 
 import math
 
-from build123d import Align, Cylinder, Part, Pos, Rot
+from build123d import Align, Cone, Cylinder, Part, Pos, Rot
+
+from components import heatset_insert_m2x4 as M2
 
 from . import params as P
 
 _MIN = (Align.CENTER, Align.CENTER, Align.MIN)
+
+# ------------------------------------------------- fastening the plate on --
+
+INSERT_INTERFERENCE = 0.4
+"""CHOSEN. Diametral interference of a heat-set pilot against the insert's
+knurl OD, in the middle of the 0.30-0.50 mm the components library gives for
+these inserts. Sized from OD, never from the vendor's label."""
+
+PLATE_SCREW_N = 3
+"""CHOSEN. Three M2 screws hold the detector plate down on the head's top rim.
+Three define a plane; a fourth would only fight it. Until these existed nothing
+held the plate on at all, which is nothing holding the detector square to the
+collection axis."""
+
+PLATE_SCREW_R = (P.LED_RING_R + P.BODY_OD / 2) / 2
+"""DERIVED. Middle of the solid rim between the cavity wall and the outside."""
+
+PLATE_SCREW_CLEAR_D = 2.6
+"""CHOSEN. Clearance hole for M2 through the plate: 0.3 mm a side, more than the
+plate's spigot lets it move (see `plate.spigot_play_at()`), so the screws clamp
+the plate and never locate it. Jared, 2026-10-01: fasteners fasten, they do not
+index."""
+
+
+def plate_screw_angles() -> list[float]:
+    """Where the plate screws go: each exactly midway between two LEDs.
+
+    Midway is the farthest any point on the rim can be from an LED bore, and
+    the bores break out through this same rim. Spread as evenly as the LED
+    count allows.
+    """
+    step = 360.0 / P.LED_N
+    picks = sorted({round(i * P.LED_N / PLATE_SCREW_N) % P.LED_N for i in range(PLATE_SCREW_N)})
+    return [step * (k + 0.5) for k in picks]
+
+
+def plate_screw_positions() -> list[tuple[float, float]]:
+    return [
+        (PLATE_SCREW_R * math.cos(math.radians(a)), PLATE_SCREW_R * math.sin(math.radians(a)))
+        for a in plate_screw_angles()
+    ]
+
+
+# ------------------------------------------------------------ the LED leads --
+
+LEAD_ROOM = 8.0
+"""CHOSEN. How far an LED's sealed back, its leads and their solder joints stand
+out of the head along the bore axis. Nothing mounted on or around the head may
+occupy it."""
+
+LEAD_CLEAR = 0.3
+"""CHOSEN. Radial air between an LED's sealed back and anything round it: the
+flange's counterbore in the head and the notch in the plate. Enough for PETG to
+print a hole a little small and still slip over the heat-shrink."""
+
+LEAD_R = P.LED_FLANGE_D / 2 + P.LED_SEAL_T + LEAD_CLEAR
+"""DERIVED. Radius of the keepout round each LED's axis, and of the counterbore
+that carries it into the head: the flange, the heat-shrink sealed over it, and
+LEAD_CLEAR. It was the bore plus 0.5 until 2026-10-21, which cleared a bare 5.8
+flange by 0.20 a side and a sealed one by nothing. Rests on the nominal flange
+and the seal wall, both ESTIMATE."""
+
+FLARE_ANGLE = 15.0
+"""CHOSEN. Half angle of the cone the bore opens into the cavity through, from
+where the lamp's body starts (P.LED_DOME_T) inward, so the dome sits in air.
+The bore was a plain cylinder cut from the emitter point, which left a wedge of
+cavity wall across half its end: 53% of each LED's axial light struck it. A
+plain cylinder started at the same place and run into the cavity clears the
+axial rays but still takes 0.2% of the light from the dome's flanks to the edge
+of the port; 6 degrees takes none, with the lamp seated half a millimetre either
+side of nominal too. 15 is the margin on that, measured by led.port_view()
+rather than assumed."""
+
+
+def lead_exit() -> float:
+    """Distance along the bore axis, from the emitter, at which the axis leaves
+    the head: through the outer wall or through the top face, whichever comes
+    first. With 3 mm LEDs at LED_Z 14 it was the wall; with the ruled 5 mm set at
+    LED_Z 18 it is the top face, under the detector plate."""
+    s, c = math.sin(math.radians(P.ILLUM_ANGLE)), math.cos(math.radians(P.ILLUM_ANGLE))
+    return min((P.BODY_H - P.LED_Z) / s, (P.BODY_OD / 2 - P.LED_RING_R) / c)
+
+
+def lead_start() -> float:
+    """Where the keepout begins along the axis: far enough inside the exit that
+    the whole bore mouth is covered, wherever the axis comes out."""
+    return lead_exit() - P.LED_SEAT_D / 2
+
+
+def lead_reach() -> tuple[float, float]:
+    """(radius, height) the keepouts reach out to, for whatever has to clear
+    them."""
+    s, c = math.sin(math.radians(P.ILLUM_ANGLE)), math.cos(math.radians(P.ILLUM_ANGLE))
+    t = lead_start() + LEAD_ROOM
+    return P.LED_RING_R + t * c + LEAD_R * s, P.LED_Z + t * s + LEAD_R * c
+
+
+def lead_keepouts() -> Part:
+    """The space each LED's sealed back and leads occupy, along its bore, from
+    where the bore leaves the head.
+
+    The bores are aimed at the port, so they climb at 45 degrees and break out
+    of the head under or through its top rim. The leads therefore come out
+    beneath whatever sits on the rim. That is the detector plate, and it is why
+    the plate is notched at every LED.
+    """
+    tool = None
+    for i in range(P.LED_N):
+        a = 360.0 * i / P.LED_N
+        k = (Rot(0, 0, a) * Pos(P.LED_RING_R, 0, P.LED_Z) * Rot(0, P.ILLUM_ANGLE, 0)
+             * Pos(0, 0, lead_start()) * Cylinder(LEAD_R, LEAD_ROOM, align=_MIN))
+        tool = k if tool is None else tool + k
+    return tool
+
+
+def _plate_insert_pilots() -> Part:
+    """Heat-set pilots for the plate screws, down into the rim from the top."""
+    depth = M2.LENGTH + 0.5
+    r = (M2.OD - INSERT_INTERFERENCE) / 2
+    tool = None
+    for x, y in plate_screw_positions():
+        pilot = Pos(x, y, P.BODY_H - depth) * Cylinder(r, depth + 1.0, align=_MIN)
+        tool = pilot if tool is None else tool + pilot
+    return tool
 
 
 def _led_bore_length() -> float:
@@ -32,6 +159,18 @@ def _led_bore_length() -> float:
     """
     radial = P.BODY_OD / 2 - P.LED_RING_R
     return radial / math.cos(math.radians(P.ILLUM_ANGLE)) + 1.0
+
+
+def flare_reach() -> float:
+    """How far the flare runs back into the cavity from the emitter point,
+    along the axis: until even its outermost generator, the one nearest the
+    port face, has left the wall, plus a millimetre. Derived from the inequality
+    that puts that generator inside the cavity radius."""
+    a = math.radians(P.ILLUM_ANGLE)
+    s, c = math.sin(a), math.cos(a)
+    k = math.tan(math.radians(FLARE_ANGLE))
+    r0 = P.LED_SEAT_D / 2 + P.LED_DOME_T * k
+    return c * r0 / (s - c * k) + 1.0
 
 
 def led_axis_positions() -> list[tuple[float, float, float]]:
@@ -48,23 +187,52 @@ def led_axis_positions() -> list[tuple[float, float, float]]:
     return out
 
 
+def _led_bore() -> Part:
+    """One LED's bore in its own frame: the emitter point at the origin, +Z
+    out along the axis through the wall.
+
+    Three coaxial cuts, from the cavity outward:
+
+    - a cone, FLARE_ANGLE either side, opening from where the lamp's body
+      starts back into the cavity, so the dome sits in open air and nothing of
+      the head is in its light;
+    - the LED_SEAT_D bore the coupon chose, which grips the body, out to the
+      shoulder at P.LED_SHOULDER_T;
+    - a counterbore of LEAD_R, the sealed flange plus clearance, from the
+      shoulder out through the rim. The flange cannot pass the bore, so it lands
+      on the shoulder, and the tip lands at the emitter point.
+    """
+    from build123d import Cone
+
+    k = math.tan(math.radians(FLARE_ANGLE))
+    t0, reach = P.LED_DOME_T, flare_reach()
+    r_b = P.LED_SEAT_D / 2
+    flare = Pos(0, 0, -reach) * Cone(r_b + (t0 + reach) * k, r_b, t0 + reach, align=_MIN)
+    # Each cut runs half a millimetre into the next, inside it, so the three
+    # fuse into one tool rather than meeting on a shared face.
+    bore = Pos(0, 0, t0 - 0.5) * Cylinder(r_b, P.LED_SHOULDER_T - t0 + 1.0, align=_MIN)
+    outer = _led_bore_length() + P.LED_LENGTH
+    counter = Pos(0, 0, P.LED_SHOULDER_T) * Cylinder(LEAD_R, outer - P.LED_SHOULDER_T, align=_MIN)
+    return flare + bore + counter
+
+
 def _led_bores() -> Part:
     """The eight angled bores, as one cutting tool."""
-    length = _led_bore_length()
+    one = _led_bore()
     tool = None
     for i in range(P.LED_N):
         a = 360.0 * i / P.LED_N
         # Rot(0, +45, 0) sends +Z to the OUTWARD beam direction in +X, so the
         # bore runs from the emitter plane outwards through the wall. Rot about
         # Z then walks it around the ring.
-        bore = (
-            Rot(0, 0, a)
-            * Pos(P.LED_RING_R, 0, P.LED_Z)
-            * Rot(0, P.ILLUM_ANGLE, 0)
-            * Cylinder(P.LED_SEAT_D / 2, length, align=_MIN)
-        )
+        bore = Rot(0, 0, a) * Pos(P.LED_RING_R, 0, P.LED_Z) * Rot(0, P.ILLUM_ANGLE, 0) * one
         tool = bore if tool is None else tool + bore
     return tool
+
+
+def web_angles() -> list[float]:
+    """Azimuth of each web: midway between two LEDs, every 360 / WEB_N."""
+    return [P.WEB_ANGLE0 + 360.0 * i / P.WEB_N for i in range(P.WEB_N)]
 
 
 def _webs() -> Part:
@@ -78,8 +246,7 @@ def _webs() -> Part:
     r_out = P.LED_RING_R + bite
     length = r_out - r_in
     tool = None
-    for i in range(P.WEB_N):
-        a = 360.0 * i / P.WEB_N
+    for a in web_angles():
         web = (
             Rot(0, 0, a)
             * Pos(r_in + length / 2, 0, z0 + P.WEB_H / 2)
@@ -118,8 +285,17 @@ def body() -> Part:
     )
     part = part - Pos(0, 0, -1.0) * Cylinder(P.PORT_D / 2, P.FLOOR_T + 2.0, align=_MIN)
 
-    # The LED bores.
+    # Bevel the port's cavity side at 45 degrees down to a short straight land
+    # at the sample face, so the floor round the port stops shadowing the light
+    # bound for the spot. The aperture at the sample is still PORT_D.
+    rise = P.FLOOR_T - P.PORT_BEVEL_LAND + 0.5
+    part = part - Pos(0, 0, P.PORT_BEVEL_LAND) * Cone(
+        P.PORT_D / 2, P.PORT_D / 2 + rise, rise, align=_MIN
+    )
+
+    # The LED bores, and the pilots the plate's inserts melt into.
     part = part - _led_bores()
+    part = part - _plate_insert_pilots()
 
     # The compliant lip: a thin ring standing proud of the port face, printed
     # as part of the same solid. It is BELOW z = 0, which is deliberate — the

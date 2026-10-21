@@ -4,9 +4,11 @@
 
 Millimetres and degrees throughout. Z is up. **z = 0 is the port face** — the
 plane the sample is pressed against — with the head occupying z > 0 and the
-sample below at z < 0. That choice is not cosmetic: `OPTICAL_HEAD.md` rules that
-the part prints port-face-down, so the model's Z and the printer's Z are the
-same direction and the face that must come out flat is the face on the bed.
+sample below at z < 0. It was chosen when the head was to print port face down,
+so the model's Z and the printer's Z would agree. The head now prints top rim
+down (2026-10-05, `OPTICAL_HEAD.md`: the lip held the port face off the bed and
+the tube started in mid-air), so the printer's Z is the model's flipped; the
+datum is unchanged.
 
 Three kinds of number live here and they are labelled:
 
@@ -100,7 +102,17 @@ with its own collection optics.
 The condition is BAFFLE_OD/2 < BAFFLE_Z0: the tube must be thinner than the
 height at which it starts. 6.0 clears 3.6 with room. Below the tube the
 collection path is open air, which costs nothing — the tube is the aperture
-stop wherever it begins."""
+stop wherever it begins.
+
+That condition is for the beam's centre line. The beam is a 5 mm dome wide, and
+its upper edge passes the tube's foot at r = BAFFLE_Z0 - 2.5 / cos 45 = 2.46,
+inside it: the tube takes 8.7% of each LED's axial rays, all bound for the far
+rim of the port, and 0.5% of the light bound for the collected spot
+(`led.remaining()`, measured 2026-10-21). Clearing the whole beam needs this
+above 7.14, and with PLATE_Z held that shortens the tube and grows the collected
+spot outward into the port floor's shadow (FLOOR_T). Tried at 7.2 on the solid:
+the tube's share goes to nothing and the floor's share of the bigger collected
+spot rises from 5.8% to 9.2%. Left at 6."""
 
 BAFFLE_L = _knob("BAFFLE_L", 18.0)
 """CHOSEN. Length of the collection tube. It sets the angular acceptance and the
@@ -120,28 +132,59 @@ LED_N = 8
 asks for: seven narrowband peaks (405, 450, 505, 530, 590, 625, 660) plus one
 white LED kept in the ring as a sanity channel."""
 
-LED_Z = _knob("LED_Z", 14.0)
+LED_Z = _knob("LED_Z", 18.0)
 """CHOSEN. Height of the LED emitter plane above the port face. It trades two
 things against each other: lower puts the emitters closer, which is brighter and
 lights a smaller spot; higher lights a bigger spot and makes the head fatter.
-14mm is the smallest value that still overfills the port with the beam estimate
-below and a whole millimetre of margin. See check()."""
+18mm is the smallest value at which the narrowest LED in the chosen set (10
+degree half angle) still overfills the port with a whole millimetre of margin;
+14mm passed only under the old 15 degree estimate. Ruled 2026-09-22. See
+check()."""
 
-LED_SEAT_D = 3.2
-"""ESTIMATE. Bore for a 3mm through-hole LED plus print clearance. The LED part
-number is not chosen, so this is a stand-in. Owed: the real emitter package."""
+LED_SEAT_D = _knob("LED_SEAT_D", 5.2)  # lint: not-a-measurement
+"""CHOSEN by the bore coupon, 2026-10-05. Bore for a 5mm (T-1 3/4) through-hole
+LED. Every LED in the ruled set is 5mm (2026-09-22), so one bore serves the ring.
+FDM holes print small, so a coupon of 45 degree bores at 5.2 to 5.6 was printed
+on Jared's printer, and 5.2 was the smallest the LED entered fully by hand and
+stayed in when turned over and tapped. This is the CAD value that prints a
+gripping bore on that printer and filament, not a diameter anyone measured; a
+different printer reruns the coupon. It was the smallest bore offered, so the
+true optimum may sit below it; 5.2 grips, which is the test."""
 
 LED_SEAT_L = 6.0
-"""ESTIMATE. How deep the LED sits in its bore. Long enough to aim it; the real
-number follows the real LED."""
+"""CHOSEN. The length of 45 degree bore, from the emitter point, that the body is
+sized to wrap with a full WALL outside it (see BODY_OD), and the length the
+09-22 plate-clearance margin was ruled on. It was first written as how deep the
+LED sits, which it never set: the lamp stops where its flange lands, and that
+is LED_SHOULDER_T. Left at 6 so the body, and the puck base built round it,
+keep their size."""
 
-LED_HALF_ANGLE = _knob("LED_HALF_ANGLE", 15.0)
-"""ESTIMATE, and the single load-bearing guess in this file. Datasheet-typical
-half-intensity angle for a narrow 3mm LED. It decides the lit spot size, which
-decides whether the beam overfills the port, which is one of the three
-constraints this geometry exists to satisfy. A wide-angle LED (30 degrees plus)
-makes the spot larger and the constraint easier; a water-clear narrow one
-(8 degrees) could fail it. Measure or specify before printing."""
+LED_BODY_D = 5.0  # lint: not-a-measurement
+LED_FLANGE_D = 5.8  # lint: not-a-measurement
+LED_FLANGE_T = 1.0  # lint: not-a-measurement
+LED_LENGTH = 8.6  # lint: not-a-measurement
+"""ESTIMATE. The nominal T-1 3/4 outline: a 5.0 body under a hemispherical dome,
+a 5.8 x 1.0 flange at the base, 8.6 from the dome tip to the flange's back face.
+Not a measured part: the components library has no LED yet. The head is now
+cut to it (the flange's counterbore and the shoulder it lands on), so when one
+is measured there these become an import and the head follows. The real flange
+has a flat on the cathode side, which only makes it narrower there."""
+
+LED_SEAL_T = 0.6  # lint: not-a-measurement
+"""ESTIMATE. Wall of the black heat-shrink sealed over each LED's back, flange
+included, before the LED goes in (`OPTICAL_HEAD.md` rules the seal). The BOM's
+~6 mm 2:1 sleeve recovers to about 0.6 wall where nothing holds it open, and is
+thinner over the 5.8 flange, which does; this takes the thick end. Sizes the
+flange's counterbore and the plate's notches."""
+
+LED_HALF_ANGLE = _knob("LED_HALF_ANGLE", 10.0)
+"""CHOSEN from datasheets, 2026-09-22. The narrowest half-intensity angle in the
+ruled LED set: Kingbright WP7113QBC/D, WP7113SGC, WP7113SYCK/J3 and WP7113SEC/J3
+all list a 20 degree viewing angle (2 x theta-half), so theta-half is 10. The
+rest are wider (HLMP-CE34 about 15, WP7113SRD/J4 15, C513A white 27.5, MT5400-UV
+about 30) and a wider beam only makes the overfill constraint easier. The
+narrowest LED is the binding case, so it is the number the geometry is checked
+against. `hardware/BOM.md` carries the part list."""
 
 # ----------------------------------------------------------------- the body --
 
@@ -152,16 +195,38 @@ against the port does not flex the optical path."""
 FLOOR_T = 2.0
 """CHOSEN. Thickness of the port face — the plate the sample presses against and
 the one surface printed directly on the bed. Thin enough that the port bore is a
-short tunnel rather than a long one, thick enough not to flex under a thumb."""
+short tunnel rather than a long one, thick enough not to flex under a thumb.
 
-WEB_N = 3
+Short is not nothing. A 45 degree ray reaching the sample at x crossed the
+floor's top at x + FLOOR_T, so an LED's axial rays cannot reach the band of the
+port within FLOOR_T of the edge nearest it: the floor itself takes 18.9% of
+them, and 5.9% of the light bound for the collected spot, whose near edge lies
+in that shadow (`led.remaining()`, measured 2026-10-21). A 45 degree chamfer
+on the port's cavity side, leaving 0.8 of floor at the port's edge, took the
+collected spot's share to nothing when tried on the solid, with the aperture,
+the land and the datum unchanged. Not cut: the port is ruled, and this is
+Jared's to change."""
+
+PORT_BEVEL_LAND = 0.8
+"""CHOSEN (Jared, 2026-10-21). Height of straight port bore kept at the sample
+face before a 45 degree bevel opens the port toward the cavity. The aperture the
+sample sees is still PORT_D, so the measured area does not change; the bevel only
+takes the floor's edge out of the light bound for the collected spot."""
+
+WEB_N = 4
 WEB_T = 2.0
 WEB_H = 6.0
 """CHOSEN. The collection tube is an island in the middle of an open cavity and
-has to be held by something. Three radial webs from tube to wall do it. They sit
-in the top WEB_H of the body, above the LED plane, because below that height
-they would be standing in the illumination — the same mistake BAFFLE_Z0
-documents, and the reason the ray view is worth building."""
+has to be held by something. Four radial webs from tube to wall do it, each
+midway between two LEDs (WEB_ANGLE0). They sit in the top WEB_H of the body,
+above the LED plane, because below that height they would be standing in the
+illumination — the same mistake BAFFLE_Z0 documents, and the reason the ray view
+is worth building.
+
+There were three, at 0/120/240, until 2026-10-21. With LEDs every 45 degrees
+that put web 0 square in front of LED 0, which lost 26% of its light to it, and
+three webs cannot all sit between LEDs on an eight-ring. Four can: WEB_N must
+divide LED_N, and check() holds it."""
 
 # ------------------------------------------------------------- the standards --
 
@@ -212,7 +277,26 @@ LED_THROW = LED_Z / _SIN_ILLUM
 
 LED_SEAT_R_OUT = LED_RING_R + LED_SEAT_L * _COS_ILLUM
 LED_SEAT_Z_OUT = LED_Z + LED_SEAT_L * _SIN_ILLUM
-"""DERIVED. Where the back of an LED seat lands; this is what sets the body size."""
+"""DERIVED. Where the back of LED_SEAT_L of bore lands; this is what sets the
+body size."""
+
+LED_SHOULDER_T = LED_LENGTH - LED_FLANGE_T
+"""DERIVED from the nominal lamp (ESTIMATE). Distance along the bore, from the
+emitter point, of the shoulder the flange's front face lands on: the lamp's own
+tip-to-flange length, so a seated lamp's dome tip is AT the emitter point and
+LED_THROW is the throw it actually has. Until 2026-10-21 there was no shoulder:
+the flange stopped on the head's outer top edge, the tip 3.15 short of the
+cavity, and the throw was 28.6, not 25.5."""
+
+LED_DOME_T = LED_BODY_D / 2
+"""DERIVED from the nominal lamp (ESTIMATE). Where the hemispherical dome ends
+and the cylindrical body starts, along the bore from the tip. The bore grips
+the body from here back; in front of it the bore flares open, so nothing of the
+head is round the dome."""
+
+WEB_ANGLE0 = 180.0 / LED_N
+"""DERIVED. Azimuth of the first web: midway between LED 0 and LED 1. The rest
+follow every 360/WEB_N."""
 
 BODY_OD = 2 * (LED_SEAT_R_OUT + LED_SEAT_D / 2 + WALL)
 """DERIVED. The body is as big as the LED ring makes it and no bigger."""
@@ -225,7 +309,7 @@ BODY_H = PLATE_Z
 """DERIVED. The body ends where the plate begins."""
 
 LIT_BEAM_D = 2 * LED_THROW * math.tan(math.radians(LED_HALF_ANGLE))
-"""DERIVED from an ESTIMATE. Beam diameter at the sample, measured across the
+"""DERIVED from the chosen half angle. Beam diameter at the sample, measured across the
 beam. Only as good as LED_HALF_ANGLE."""
 
 LIT_SPOT_MINOR = LIT_BEAM_D
@@ -281,7 +365,7 @@ def constraints() -> list[tuple[str, bool, str]]:
         LIT_SPOT_MINOR >= PORT_D,
         f"lit minor axis {LIT_SPOT_MINOR:.2f} vs port {PORT_D:.2f} "
         f"(margin {LIT_SPOT_MINOR - PORT_D:+.2f}), resting on "
-        f"LED_HALF_ANGLE={LED_HALF_ANGLE:g}deg which is an ESTIMATE",
+        f"LED_HALF_ANGLE={LED_HALF_ANGLE:g}deg, the narrowest LED in the ruled set",
     ))
 
     # 2. The collected spot must sit inside the lit one, with room to move.
@@ -337,6 +421,15 @@ def constraints() -> list[tuple[str, bool, str]]:
         f"{LED_N} LEDs; an odd ring reads brush direction",
     ))
 
+    # 7. Every web midway between two LEDs, never in front of one. Three webs on
+    #    an eight-ring put one square in an LED's beam; see WEB_N.
+    out.append((
+        "the webs stand between LEDs",
+        LED_N % WEB_N == 0,
+        f"{WEB_N} webs from {WEB_ANGLE0:g}deg every {360 / WEB_N:g}deg, LEDs every "
+        f"{360 / LED_N:g}deg; each web {WEB_ANGLE0:g}deg from its nearest LED",
+    ))
+
     return out
 
 
@@ -346,7 +439,11 @@ def estimates() -> list[tuple[str, float, str]]:
         ("LED_HALF_ANGLE", LED_HALF_ANGLE,
          "decides the lit spot; specify the LED or measure the beam before printing"),
         ("LED_SEAT_D", LED_SEAT_D, "follows the chosen LED package"),
-        ("LED_SEAT_L", LED_SEAT_L, "follows the chosen LED package"),
+        ("LED_LENGTH", LED_LENGTH, "nominal T-1 3/4 outline, with LED_BODY_D, LED_FLANGE_D and "
+         "LED_FLANGE_T; sets the shoulder the flange lands on, so the tip lands at the "
+         "emitter point only as well as this is right. Measure one into components"),
+        ("LED_SEAL_T", LED_SEAL_T, "heat-shrink wall over the LED back; sizes the counterbore "
+         "and the plate notches"),
         ("TILE_T", TILE_T, "comes with the PTFE disc when it is bought"),
     ]
 
