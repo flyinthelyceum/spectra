@@ -401,3 +401,105 @@ class TestPuck:
         gated = set(assembly.omitted_families())
         assert set(viewer.MATERIALS) == built | gated
         assert built & gated == set()
+
+
+# ------------------------------------------------------- the LEDs going in --
+
+@pytest.fixture(scope="module")
+def led_checks():
+    b123d("build123d")
+    from spectra.cad import led
+
+    return {name: (ok, detail) for name, ok, detail in led.check()}
+
+
+class TestLedInsertion:
+    """How a 5 mm LED reaches its bore, checked against the printed head.
+
+    The lamp is the nominal T-1 3/4 outline (ESTIMATE, see led.py), so these
+    test the shape of the fit: that a path exists, what stops the lamp, and that
+    the plate goes on over it. None of them asserts a seat depth.
+    """
+
+    def test_materials_cover_the_head_assembly_exactly(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        gated = set(assembly.omitted_families())
+        assert "led" in built
+        assert set(viewer.MATERIALS) == built | gated
+        assert built & gated == set()
+
+    def test_leds_are_drawn_only_when_asked(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.delenv("SPECTRA_LEDS", raising=False)
+        from spectra.cad import assembly, led
+
+        # Off by default, so every other page and test sees the head it saw
+        # before; the coverage tests above then hold through omitted_families.
+        assert led.placed() == []
+        assert assembly.access() == []
+        assert "led" in assembly.omitted_families()
+
+    def test_every_access_family_is_drawn_and_coloured(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_CASE", "puck-v1")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly, viewer
+
+        built = set(viewer.families())
+        for a in assembly.access():
+            assert a["family"] in viewer.MATERIALS, a["family"]
+            assert a["family"] in built, a["family"]
+            assert a["travel_mm"] > 0, a["family"]
+
+    def test_each_led_travels_its_own_bore_axis(self, monkeypatch):
+        b123d("build123d")
+        monkeypatch.setenv("SPECTRA_LEDS", "1")
+        from spectra.cad import assembly
+
+        (entry,) = [a for a in assembly.access() if a["family"] == "led"]
+        assert len(entry["dirs"]) == P.LED_N
+        for i, d in enumerate(entry["dirs"]):
+            # The LED moves INTO the head along the bore: down at the
+            # illumination angle from vertical, toward the axis, at its own
+            # azimuth on the ring.
+            assert math.isclose(math.hypot(*d), 1.0, abs_tol=1e-9)
+            assert math.isclose(math.degrees(math.acos(-d[2])), P.ILLUM_ANGLE, abs_tol=1e-6)
+            az = math.radians(360.0 * i / P.LED_N)
+            assert d[0] * math.cos(az) + d[1] * math.sin(az) < 0
+
+    def test_every_led_starts_clear_of_the_head(self):
+        b123d("build123d")
+        from spectra.cad import head, led
+
+        # The viewer's travel is derived from an inequality, not tuned by eye;
+        # this is the inequality.
+        body, one = head.body(), led.lamp()
+        for i in range(P.LED_N):
+            start = led.location(i, led.seat(i) + led.travel()) * one
+            assert (body & start).volume < 1e-6, i
+
+    def test_every_led_reaches_its_seat(self, led_checks):
+        ok, detail = led_checks["every LED reaches its seat from outside along its bore"]
+        assert ok, detail
+
+    def test_the_flange_is_what_stops_it(self, led_checks):
+        ok, detail = led_checks["the flange is what stops it"]
+        assert ok, detail
+
+    def test_the_plate_notches_clear_the_seated_leds(self, led_checks):
+        ok, detail = led_checks["the plate's notches clear the seated flanges and leads"]
+        assert ok, detail
+
+    @pytest.mark.xfail(strict=True, reason=(
+        "found 2026-10-21: each bore is cut from the emitter point on the cavity "
+        "wall, which leaves a wedge of wall across half its end, and web 0 stands "
+        "in front of LED 0. Strict, so fixing the head turns this into a failure "
+        "that says to drop the mark."))
+    def test_the_head_leaves_each_beam_open(self, led_checks):
+        ok, detail = led_checks["the head leaves each LED's beam open"]
+        assert ok, detail
