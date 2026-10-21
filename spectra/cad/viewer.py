@@ -3,6 +3,7 @@
 
     .venv/bin/python -m spectra.cad.viewer                    # the LED beam sweep
     .venv/bin/python -m spectra.cad.viewer --variant "Long tube=BAFFLE_L:26"
+    .venv/bin/python -m spectra.cad.viewer --head-assembly    # how the LEDs go in
 
 The page is one HTML file: every part tessellated and embedded, three.js
 inlined, no server, no network.
@@ -97,6 +98,10 @@ MATERIALS = {
                       opacity=1.0, metalness=0.04, group="printed"),
     "puck_lid": dict(label="Puck lid", colour="#26282A",
                      opacity=0.3, metalness=0.04, group="printed"),
+    # The eight lamps (SPECTRA_LEDS). Pale epoxy, so they read inside a black
+    # head on either ground; the nominal outline, with the leads as bought.
+    "led": dict(label="5 mm LED, T-1 3/4 (nominal outline, leads as bought)",
+                colour="#E9DFB4", opacity=1.0, metalness=0.1, group="reference"),
 }
 
 
@@ -119,6 +124,17 @@ DEFAULT_VARIANTS = [
 PUCK_VARIANTS = [
     ("Puck v1", {"SPECTRA_CASE": "puck-v1"}),
     ("Puck v1, exploded", {"SPECTRA_CASE": "puck-v1", "SPECTRA_EXPLODE": "22"}),
+]
+
+# The assembly-access view: how each LED reaches its bore (Jared, 2026-10-21: "i
+# can see the slotted holes but there isn't assembly access"). Built on the puck
+# so the plate is the puck_plate he printed; the rest of the puck is built but
+# starts hidden, and the page frames the parts that are left.
+HEAD_ASSEMBLY_HIDDEN = ("puck_base", "puck_tray", "puck_lid", "esp32_board", "driver_board",
+                        "light_trap", "tile_holder", "ptfe_tile", "sample_card")
+HEAD_ASSEMBLY_VARIANTS = [
+    ("Head + 8 LEDs", {"SPECTRA_CASE": "puck-v1", "SPECTRA_LEDS": "1",
+                       "SPECTRA_VIEW_HIDE": ",".join(HEAD_ASSEMBLY_HIDDEN)}),
 ]
 
 CASE_VARIANTS = [
@@ -160,23 +176,29 @@ def _dump(out_path: Path, tolerance_mm: float, angular: float) -> None:
     Millimetres throughout, z = 0 at the port face. Nothing is converted
     anywhere in this file and the page labels everything mm.
     """
-    from . import assembly
+    from . import assembly, led
     from . import params as P
 
     placed = assembly.all_placed()
+    hidden = [f for f in os.environ.get("SPECTRA_VIEW_HIDE", "").split(",") if f]
 
     # One buffer pair per family: the instances of a family are concatenated,
-    # with each block's indices shifted by the vertices already in it.
+    # with each block's indices shifted by the vertices already in it. Where
+    # each instance's indices start and how many it has travels with the
+    # buffer, so the page can move one LED along its own bore.
     verts_of: dict[str, array] = {}
     idx_of: dict[str, array] = {}
+    inst_of: dict[str, list] = {}
     for name, solid in placed:
         fam = _family(name)
         pos = verts_of.setdefault(fam, array("f"))
         idx = idx_of.setdefault(fam, array("I"))
         vs, tris = solid.tessellate(tolerance_mm, angular)
         base = len(pos) // 3
+        start = len(idx)
         pos.extend(c for v in vs for c in (v.X, v.Y, v.Z))
         idx.extend(base + i for t in tris for i in t)
+        inst_of.setdefault(fam, []).append([start, len(idx) - start])
 
     meshes = {}
     for fam, pos in verts_of.items():
@@ -188,9 +210,12 @@ def _dump(out_path: Path, tolerance_mm: float, angular: float) -> None:
             "positions": base64.b64encode(pos.tobytes()).decode(),
             "indices": base64.b64encode(idx.tobytes()).decode(),
             "triangles": len(idx) // 3,
+            "instances": inst_of[fam],
         }
 
-    boxes = [s.bounding_box() for _, s in placed]
+    # Framed on what the page shows at first: a family that starts hidden would
+    # otherwise set the camera's distance for parts nobody is looking at.
+    boxes = [s.bounding_box() for n, s in placed if _family(n) not in hidden]
     bbox = {
         "min": [min(b.min.X for b in boxes), min(b.min.Y for b in boxes), min(b.min.Z for b in boxes)],
         "max": [max(b.max.X for b in boxes), max(b.max.Y for b in boxes), max(b.max.Z for b in boxes)],
@@ -212,6 +237,9 @@ def _dump(out_path: Path, tolerance_mm: float, angular: float) -> None:
         "failing": sum(1 for c in checks if not c["ok"]),
         "bbox": bbox,
         "meshes": meshes,
+        "hidden": hidden,
+        "access": assembly.access(),
+        "leds": led.payload() if led.shown() else None,
     }
     out_path.write_text(json.dumps(variant))
 
@@ -331,6 +359,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="build a BAFFLE_L sweep instead of the LED beam sweep")
     ap.add_argument("--puck", action="store_true",
                     help="the detailed puck, assembled and exploded")
+    ap.add_argument("--head-assembly", action="store_true",
+                    help="the head with its eight LEDs: how each one travels into its bore")
     ap.add_argument("--cases", action="store_true",
                     help="the three case concepts from case.py instead of the LED sweep")
     ap.add_argument("--variant", action="append", default=[], metavar="LABEL=KNOB:VAL,...",
@@ -352,6 +382,8 @@ def main(argv: list[str] | None = None) -> int:
         specs = [(f"{h:g}mm tube", {"SPECTRA_BAFFLE_L": f"{h:g}"}) for h in args.baffle_lengths]
     elif args.cases:
         specs = CASE_VARIANTS
+    elif args.head_assembly:
+        specs = HEAD_ASSEMBLY_VARIANTS
     elif args.puck:
         specs = PUCK_VARIANTS
     else:
