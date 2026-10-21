@@ -110,3 +110,10 @@ No maths, no session files, no averaging, no saturation check: all of that is
 `spectra.capture`, tested on the computer. The board's own RGB LED is switched off at
 start; its red power LED is not switchable, so cover it with black tape before any
 dark reading.
+
+## The glow demo
+
+`glow.py` is a slow demo, not the measurement: each breath the LEDs go dark while
+the sensor reads the room, then a wave rolls violet to deep red, each LED as bright
+as its band. Copy it onto the drive as `code.py`; copy the bridge `code.py` back to
+return to `spectra.capture`.
