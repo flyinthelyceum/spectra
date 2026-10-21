@@ -416,9 +416,11 @@ def led_checks():
 class TestLedInsertion:
     """How a 5 mm LED reaches its bore, checked against the printed head.
 
-    The lamp is the nominal T-1 3/4 outline (ESTIMATE, see led.py), so these
-    test the shape of the fit: that a path exists, what stops the lamp, and that
-    the plate goes on over it. None of them asserts a seat depth.
+    The lamp is the nominal T-1 3/4 outline (ESTIMATE, see params), so these
+    test the shape of the fit: that a path exists, what stops the lamp, that it
+    stops where the optics assume, and that the plate goes on over it. The
+    shoulder is cut from the same nominal lamp, so the seat test asserts that
+    the head is cut to its own lamp, not a measured depth.
     """
 
     def test_materials_cover_the_head_assembly_exactly(self, monkeypatch):
@@ -491,15 +493,36 @@ class TestLedInsertion:
         ok, detail = led_checks["the flange is what stops it"]
         assert ok, detail
 
-    def test_the_plate_notches_clear_the_seated_leds(self, led_checks):
-        ok, detail = led_checks["the plate's notches clear the seated flanges and leads"]
+    def test_every_led_seats_where_the_optics_put_it(self, led_checks):
+        # 2026-10-21: the flange stopped on the head's outer top edge, the tip
+        # 3.15 short of the cavity, so every optics number resting on
+        # LED_THROW described a head nobody had built.
+        ok, detail = led_checks["every LED seats where the optics put it"]
         assert ok, detail
 
-    @pytest.mark.xfail(strict=True, reason=(
-        "found 2026-10-21: each bore is cut from the emitter point on the cavity "
-        "wall, which leaves a wedge of wall across half its end, and web 0 stands "
-        "in front of LED 0. Strict, so fixing the head turns this into a failure "
-        "that says to drop the mark."))
-    def test_the_head_leaves_each_beam_open(self, led_checks):
-        ok, detail = led_checks["the head leaves each LED's beam open"]
+    def test_the_lead_keepout_holds_each_sealed_back(self, led_checks):
+        ok, detail = led_checks["the lead keepout holds each sealed back"]
         assert ok, detail
+
+    def test_the_plate_notches_clear_the_sealed_leds(self, led_checks):
+        # The notch cleared a bare flange by 0.20 a side, so heat-shrink touched.
+        ok, detail = led_checks["the plate's notches clear the sealed backs and leads"]
+        assert ok, detail
+
+    def test_nothing_round_an_led_stands_in_its_beam(self, led_checks):
+        # Was a strict xfail, found 2026-10-21: each bore was cut from the
+        # emitter point on the cavity wall, which left a wedge of wall across
+        # half its end (53% of the axial light), and web 0 stood in front of
+        # LED 0 (26% more). The bores now flare open into the cavity and the
+        # webs sit between LEDs. What the collection tube and the port's floor
+        # take is reported by led.remaining(), not counted here.
+        ok, detail = led_checks["nothing round an LED stands in its beam"]
+        assert ok, detail
+
+    def test_webs_sit_midway_between_leds(self):
+        b123d("build123d")
+        from spectra.cad import head
+
+        step = 360.0 / P.LED_N
+        for a in head.web_angles():
+            assert math.isclose((a / step) % 1.0, 0.5)

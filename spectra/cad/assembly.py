@@ -114,14 +114,14 @@ def access() -> list[dict]:
     out = [{
         "family": "led", "order": 1, "travel_mm": led.travel(),
         "dirs": [[-x for x in led.direction(i)] for i in range(P.LED_N)],
-        "note": "dome first down each bore, until the flange lands on the head's outer edge",
+        "note": "dome first down each bore, back sealed, until the flange lands on its shoulder",
     }]
     if plate.available():
         plate_fam = "puck_plate" if "detector_plate" in case.replaces() else "detector_plate"
         for fam in (plate_fam, "as7341_board"):
             out.append({"family": fam, "order": 2, "dir": [0.0, 0.0, -1.0],
                         "travel_mm": led.plate_travel(),
-                        "note": "straight down onto the rim, its notches over the LED backs"})
+                        "note": "straight down onto the rim, its notches over the sealed backs"})
     return out
 
 

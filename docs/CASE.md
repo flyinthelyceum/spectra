@@ -164,7 +164,7 @@ from the base:
 |---|---|---|
 | Lid on body | The rim's rebate centres it, one key under its edge (opposite the USB opening, invisible from outside) clocks it, and it lands on the rim's step, so one printed part sets its height | 0.15 radial, 0.1 at the key |
 | Plate and tray on the posts | A tube rising from each post through the plate's ear and 2 mm into the tray's standoff | 0.1 |
-| Head under the plate | A spigot ring under the plate, broken by the head's three webs, one arc tight between two of them | 0.1 |
+| Head under the plate | A spigot ring under the plate, broken by the head's four webs, one arc tight between two of them | 0.1 |
 | Board in the tray | The corner fences, as before | 0.3 |
 
 Every M3 hole is now 3.6 mm and every M2 hole 2.6 mm, wider than the joint's
@@ -179,6 +179,12 @@ stack be 0.3 mm out either way and still clamp. The collar's clearance went to
 **Seal the LED backs** with black heat-shrink or black silicone before the head
 goes in. The bores open into the case and the USB opening lets room light in, so
 an unsealed clear LED passes it into the head. `OPTICAL_HEAD.md` now rules it.
+Since 2026-10-21 each LED sinks into a counterbore until its flange lands on a
+shoulder, so heat-shrink goes on first, off the head: over the flange and the
+lead roots, trimmed flush with the flange's front face so the sleeve never
+reaches the bore. The counterbore is sized for a 0.6 wall (`LED_SEAL_T`, an
+estimate). Silicone goes on after the LED is seated, into the counterbore behind
+the flange.
 
 **Assemble it upside down.** With the screws coming from below, the stack builds
 into the lid: lid face down on the bench, the board on its pegs, then the tray,

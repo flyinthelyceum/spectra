@@ -284,10 +284,12 @@ PLATE_TOP = P.PLATE_Z + plate.PLATE_T
 
 
 def led_breakout_z() -> float:
-    """Lowest height at which an LED bore breaks out of the head's outer wall."""
+    """Lowest height at which an LED bore breaks out of the head's outer wall.
+    The flange's counterbore is the widest cut that reaches the wall, so its
+    lower edge is the one that breaks out lowest."""
     run = HEAD_R - P.LED_RING_R
     axis_z = P.LED_Z + run * math.tan(math.radians(P.ILLUM_ANGLE))
-    return axis_z - (P.LED_SEAT_D / 2) / math.cos(math.radians(P.ILLUM_ANGLE))
+    return axis_z - head.LEAD_R / math.cos(math.radians(P.ILLUM_ANGLE))
 
 
 def board_layout() -> tuple[float, float]:

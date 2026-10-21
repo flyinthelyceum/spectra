@@ -42,19 +42,21 @@ SPIGOT_H = 1.5
 SPIGOT_T = 1.2
 """CHOSEN. A ring under the plate that drops 1.5 mm into the head's cavity, three
 perimeters thick. It is what locates the plate on the head, so the M2 screws
-only clamp. Broken into three arcs by the head's webs, which reach the top of
-the cavity."""
+only clamp. Broken into WEB_N arcs by the head's webs, which reach the top of
+the cavity, and keyed between two of them."""
 
 SPIGOT_CLEAR = 0.1
 """CHOSEN. Radial clearance of the spigot in the cavity bore, and tangential
 clearance of the key arc against its two webs. A locating fit for PETG."""
 
 SPIGOT_LOOSE = 1.0
-"""CHOSEN. Tangential clearance of the other two arcs against their webs. One arc
+"""CHOSEN. Tangential clearance of the other arcs against their webs. One arc
 clocks the plate; two would fight each other through the print's tolerance."""
 
 KEY_WEBS = (0, 1)
-"""CHOSEN. The two webs the key arc fits between."""
+"""CHOSEN. The two webs the key arc fits between: with four webs from 22.5
+degrees, the quarter from 22.5 to 112.5. Re-keyed with the webs on 2026-10-21;
+a plate printed for the three-web head does not fit this one."""
 
 
 class MissingMeasurement(RuntimeError):
@@ -95,7 +97,7 @@ def _require() -> None:
 
 
 def _web_angle(i: int) -> float:
-    return 360.0 * i / P.WEB_N
+    return head.web_angles()[i]
 
 
 def _web_cut(i: int, clear: float, r0: float, r1: float) -> Part:
