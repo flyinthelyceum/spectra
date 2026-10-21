@@ -207,6 +207,12 @@ collected spot's share to nothing when tried on the solid, with the aperture,
 the land and the datum unchanged. Not cut: the port is ruled, and this is
 Jared's to change."""
 
+PORT_BEVEL_LAND = 0.8
+"""CHOSEN (Jared, 2026-10-21). Height of straight port bore kept at the sample
+face before a 45 degree bevel opens the port toward the cavity. The aperture the
+sample sees is still PORT_D, so the measured area does not change; the bevel only
+takes the floor's edge out of the light bound for the collected spot."""
+
 WEB_N = 4
 WEB_T = 2.0
 WEB_H = 6.0

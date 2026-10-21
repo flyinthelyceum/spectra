@@ -432,9 +432,9 @@ def remaining() -> list[tuple[str, str]]:
         ("the port's own floor",
          f"takes {port[0]:.1%} of each LED's axial beam, {port[1]:.1%} of its light to the "
          f"port and {port[2]:.1%} of its light to the collected spot: the {P.FLOOR_T:g} mm "
-         f"floor round the port shadows the side nearest the LED. A 45 degree chamfer on the "
-         f"port's cavity side leaving 0.8 at its edge took the collected spot's share to "
-         f"nothing when tried. Left: the port is kept as ruled; see FLOOR_T"),
+         f"floor round the port, bevelled at 45 degrees down to a {P.PORT_BEVEL_LAND:g} mm "
+         f"land at the sample face (Jared, 2026-10-21). What it still takes misses the "
+         f"collected spot. Left: the aperture at the sample is ruled; see PORT_BEVEL_LAND"),
     ]
 
 

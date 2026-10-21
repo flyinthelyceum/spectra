@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import math
 
-from build123d import Align, Cylinder, Part, Pos, Rot
+from build123d import Align, Cone, Cylinder, Part, Pos, Rot
 
 from components import heatset_insert_m2x4 as M2
 
@@ -284,6 +284,14 @@ def body() -> Part:
         P.COLLECT_D / 2, P.BAFFLE_L + 2.0, align=_MIN
     )
     part = part - Pos(0, 0, -1.0) * Cylinder(P.PORT_D / 2, P.FLOOR_T + 2.0, align=_MIN)
+
+    # Bevel the port's cavity side at 45 degrees down to a short straight land
+    # at the sample face, so the floor round the port stops shadowing the light
+    # bound for the spot. The aperture at the sample is still PORT_D.
+    rise = P.FLOOR_T - P.PORT_BEVEL_LAND + 0.5
+    part = part - Pos(0, 0, P.PORT_BEVEL_LAND) * Cone(
+        P.PORT_D / 2, P.PORT_D / 2 + rise, rise, align=_MIN
+    )
 
     # The LED bores, and the pilots the plate's inserts melt into.
     part = part - _led_bores()

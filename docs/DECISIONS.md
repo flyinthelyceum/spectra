@@ -567,3 +567,10 @@ each one hits. Bore, flare and webs take
   bound for the collected spot. A 45° chamfer on its cavity side, leaving 0.8
   at the edge, took the spot's share to nothing when tried. Not cut, because the
   port is ruled; it is Jared's call before the reprint.
+
+**Ruled the same day: bevel the port (Jared, "yes on the bevel").** The port's
+cavity side is now a 45° bevel down to a 0.8 mm straight land at the sample face
+(`PORT_BEVEL_LAND`, CHOSEN). The aperture the sample sees is still `PORT_D`, so
+the measured area is unchanged. Measured on the solid: the floor's share of the
+light bound for the collected spot went from 5.9% to 0.0%, and its share of the
+axial rays from 18.9% to 1.5%.
