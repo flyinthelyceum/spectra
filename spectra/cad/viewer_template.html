@@ -870,22 +870,23 @@ function renderSteps() {
   const L = leds();
   document.getElementById('led-steps').innerHTML = [
     `<b>Plate off.</b> Each slot in the rim is the top of a bore that runs down at ${L.angle}° to the cavity wall.`,
+    `<b>Seal the back first</b>, off the head: black heat-shrink over the flange and the lead roots, trimmed flush with the flange’s front face, so the sleeve never reaches the bore.`,
     `<b>Tilt the LED ${L.angle}°</b>, dome down and toward the middle, leads leaning out, in line with the slot.`,
-    `<b>Push it down the bore</b> until the flange catches on the head’s outer edge. The dome stops ${f1(L.tip)} mm short of the cavity.`,
-    `<b>Then the plate.</b> Its notches drop over the LED backs.`,
+    `<b>Push it down the bore</b> until the flange lands on the shoulder at the foot of the wide counterbore. ${Math.abs(L.tip) < 0.05 ? 'The dome tip is then on the cavity wall, where the optics put the emitter.' : `The dome tip stops ${f2(L.tip)} mm from the cavity wall.`}`,
+    `<b>Then the plate.</b> Its notches drop over the sealed backs.`,
   ].map(t => `<li>${t}</li>`).join('');
 }
 
 function renderLedReadout() {
   const L = leds(), m = L.mouth;
   const rows = [
-    ['Where it goes in', `the slot on the rim face, from r ${f1(m.r_inner)} out to the edge at r ${f1(m.r_outer_edge)}, ${m.width} wide. It just breaks the outer edge: ${f1(m.edge_gap_w)} wide, ${f2(m.edge_gap_depth)} deep.`, ''],
+    ['Where it goes in', `the slot on the rim face, ${m.width} wide from r ${f1(m.r_inner)}, opening into the ${f1(m.counter_d)} counterbore from r ${f1(m.r_shoulder)} out to the edge at r ${f1(m.r_outer_edge)}. It breaks the outer edge ${f1(m.edge_gap_w)} wide, ${f2(m.edge_gap_depth)} deep.`, ''],
     ['Which way', `dome first, along the bore axis, ${L.angle}° from vertical with the back leaning out.`, ''],
-    ['Where it stops', `the ${L.lamp.flange_d} flange will not pass the ${L.bore_d} bore. It lands on the head’s outer top edge (r ${f1(L.contact[0])}, z ${f1(L.contact[1])}), ${f2(L.flange_front)} along the axis from the emitter point.`, ''],
-    ['Seated', `dome tip ${f2(L.tip)} up the bore from the cavity wall; back ${f1(L.back_above_rim)} above the rim face. Throw to the port ${f1(L.throw_seated)}, where the optics assume ${f1(L.throw_assumed)}.`, ''],
-    ['Held', L.grip_full ? `the bore is closed all round only from ${f1(L.grip_full[0])} to ${f1(L.grip_full[1])} along the axis, which is the dome; the body starts at ${f2(L.body_starts)} and lies in a trough that wraps half of it out to ${f1(L.grip_half[1])}.` : '', ''],
-    ['Plate notch', `${f2(L.notch_clear)} a side round the flange. ${f1(L.lead_room_left)} of the lead keepout is left behind it.`, ''],
-  ];
+    ['Where it stops', `the ${L.lamp.flange_d} flange will not pass the ${L.bore_d} bore. It lands on the shoulder at the foot of the counterbore (r ${f1(L.contact[0])}, z ${f1(L.contact[1])}), ${f2(L.flange_front)} along the axis from the emitter point.`, ''],
+    ['Seated', `dome tip ${f2(L.tip)} from the emitter point, in a ${L.flare}° flare open to the cavity; back ${f2(L.back_above_rim)} above the rim face on the axis. Throw to the port ${f2(L.throw_seated)}; the optics assume ${f2(L.throw_assumed)}.`, ''],
+    ['Held', L.grip_full ? `the bore grips the body all round from ${f1(L.grip_full[0])} to ${f1(L.grip_full[1])} along the axis and at least half round out to ${f1(L.grip_half[1])}; the body runs from ${f1(L.body_starts)} to the flange.` : '', ''],
+    ['Plate notch', `${f2(L.notch_clear)} a side round the sealed back (${L.seal_t} heat-shrink), ${f2(L.notch_clear_bare)} round a bare flange. ${f1(L.lead_room_left)} of the lead keepout is left behind it.`, ''],
+  ].concat((L.remaining || []).map(r => ['Still in the light', `${r.name} ${r.detail}.`, '']));
   const checks = L.checks.map(c => [c.ok ? 'Holds' : 'FAILS', `${c.name}: ${c.detail}`, c.ok ? 'ok' : 'danger']);
   document.getElementById('led-readout').innerHTML = rows.concat(checks)
     .map(([k, v, cls]) => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`).join('');
@@ -935,10 +936,11 @@ function buildCallouts() {
   const items = [
     [V(ax.mouth), 'The slot in the rim is the top of the bore', [-210, -80]],
     [new THREE.Vector3(L.contact[0] * Math.cos(a), L.contact[0] * Math.sin(a), L.contact[1]),
-     `The ${L.lamp.flange_d} mm flange stops on this edge`, [40, 34]],
-    [alongBore(ax, ax.seat_tip), `Seated, the dome stops here, ${f1(L.tip)} mm short of the cavity`, [-250, 10]],
-    [alongBore(ax, 0), 'Cavity wall, where the optics put the emitter', [-250, 70]],
-  ];
+     `The ${L.lamp.flange_d} mm flange lands on this shoulder`, [40, 34]],
+  ].concat(Math.abs(ax.seat_tip) < 0.05
+    ? [[alongBore(ax, 0), 'Seated, the dome tip is on the cavity wall, where the optics put the emitter', [-250, 40]]]
+    : [[alongBore(ax, ax.seat_tip), `Seated, the dome tip stops here, ${f2(ax.seat_tip)} mm along the bore`, [-250, 10]],
+       [alongBore(ax, 0), 'Cavity wall, where the optics put the emitter', [-250, 70]]]);
   for (const [p, text, off] of items) {
     const el = document.createElement('div');
     el.className = 'callout';
@@ -1007,10 +1009,10 @@ function applyTravel() {
   stageLabel.innerHTML =
     kl === 0 ? `<b>Start.</b> Each LED ${f1(ledA.travel_mm)} mm back along its bore, above its slot.` :
     kl < 1 ? `<b>Going in.</b> ${f1(ledA.travel_mm * (1 - kl))} mm to go along the bore.` :
-    !plateOn ? `<b>Seated.</b> Every flange is on the head’s outer edge.` :
-    kp === 0 ? `<b>Seated.</b> Every flange is on the head’s outer edge. The plate is next.` :
+    !plateOn ? `<b>Seated.</b> Every flange is on its shoulder.` :
+    kp === 0 ? `<b>Seated.</b> Every flange is on its shoulder. The plate is next.` :
     kp < 1 ? `<b>Plate coming down.</b> ${f1(plateA.travel_mm * (1 - kp))} mm to go.` :
-    `<b>Plate on.</b> Its notches sit over the LED backs.`;
+    `<b>Plate on.</b> Its notches sit over the sealed backs.`;
   needs();
 }
 travelEl.addEventListener('input', () => { stopPlay(); travelF = travelEl.value / 1000; applyTravel(); });

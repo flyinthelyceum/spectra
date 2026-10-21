@@ -74,10 +74,28 @@ LEAD_ROOM = 8.0
 out of the head along the bore axis. Nothing mounted on or around the head may
 occupy it."""
 
-LEAD_R = P.LED_SEAT_D / 2 + 0.5
-"""DERIVED. Radius of the keepout around each LED's axis: the bore, plus the
-black heat-shrink sealed over the LED's back. Follows LED_SEAT_D, which the bore
-coupon will set."""
+LEAD_CLEAR = 0.3
+"""CHOSEN. Radial air between an LED's sealed back and anything round it: the
+flange's counterbore in the head and the notch in the plate. Enough for PETG to
+print a hole a little small and still slip over the heat-shrink."""
+
+LEAD_R = P.LED_FLANGE_D / 2 + P.LED_SEAL_T + LEAD_CLEAR
+"""DERIVED. Radius of the keepout round each LED's axis, and of the counterbore
+that carries it into the head: the flange, the heat-shrink sealed over it, and
+LEAD_CLEAR. It was the bore plus 0.5 until 2026-10-21, which cleared a bare 5.8
+flange by 0.20 a side and a sealed one by nothing. Rests on the nominal flange
+and the seal wall, both ESTIMATE."""
+
+FLARE_ANGLE = 15.0
+"""CHOSEN. Half angle of the cone the bore opens into the cavity through, from
+where the lamp's body starts (P.LED_DOME_T) inward, so the dome sits in air.
+The bore was a plain cylinder cut from the emitter point, which left a wedge of
+cavity wall across half its end: 53% of each LED's axial light struck it. A
+plain cylinder started at the same place and run into the cavity clears the
+axial rays but still takes 0.2% of the light from the dome's flanks to the edge
+of the port; 6 degrees takes none, with the lamp seated half a millimetre either
+side of nominal too. 15 is the margin on that, measured by led.port_view()
+rather than assumed."""
 
 
 def lead_exit() -> float:
@@ -143,6 +161,18 @@ def _led_bore_length() -> float:
     return radial / math.cos(math.radians(P.ILLUM_ANGLE)) + 1.0
 
 
+def flare_reach() -> float:
+    """How far the flare runs back into the cavity from the emitter point,
+    along the axis: until even its outermost generator, the one nearest the
+    port face, has left the wall, plus a millimetre. Derived from the inequality
+    that puts that generator inside the cavity radius."""
+    a = math.radians(P.ILLUM_ANGLE)
+    s, c = math.sin(a), math.cos(a)
+    k = math.tan(math.radians(FLARE_ANGLE))
+    r0 = P.LED_SEAT_D / 2 + P.LED_DOME_T * k
+    return c * r0 / (s - c * k) + 1.0
+
+
 def led_axis_positions() -> list[tuple[float, float, float]]:
     """Emitter centre of each LED, in head coordinates.
 
@@ -157,23 +187,52 @@ def led_axis_positions() -> list[tuple[float, float, float]]:
     return out
 
 
+def _led_bore() -> Part:
+    """One LED's bore in its own frame: the emitter point at the origin, +Z
+    out along the axis through the wall.
+
+    Three coaxial cuts, from the cavity outward:
+
+    - a cone, FLARE_ANGLE either side, opening from where the lamp's body
+      starts back into the cavity, so the dome sits in open air and nothing of
+      the head is in its light;
+    - the LED_SEAT_D bore the coupon chose, which grips the body, out to the
+      shoulder at P.LED_SHOULDER_T;
+    - a counterbore of LEAD_R, the sealed flange plus clearance, from the
+      shoulder out through the rim. The flange cannot pass the bore, so it lands
+      on the shoulder, and the tip lands at the emitter point.
+    """
+    from build123d import Cone
+
+    k = math.tan(math.radians(FLARE_ANGLE))
+    t0, reach = P.LED_DOME_T, flare_reach()
+    r_b = P.LED_SEAT_D / 2
+    flare = Pos(0, 0, -reach) * Cone(r_b + (t0 + reach) * k, r_b, t0 + reach, align=_MIN)
+    # Each cut runs half a millimetre into the next, inside it, so the three
+    # fuse into one tool rather than meeting on a shared face.
+    bore = Pos(0, 0, t0 - 0.5) * Cylinder(r_b, P.LED_SHOULDER_T - t0 + 1.0, align=_MIN)
+    outer = _led_bore_length() + P.LED_LENGTH
+    counter = Pos(0, 0, P.LED_SHOULDER_T) * Cylinder(LEAD_R, outer - P.LED_SHOULDER_T, align=_MIN)
+    return flare + bore + counter
+
+
 def _led_bores() -> Part:
     """The eight angled bores, as one cutting tool."""
-    length = _led_bore_length()
+    one = _led_bore()
     tool = None
     for i in range(P.LED_N):
         a = 360.0 * i / P.LED_N
         # Rot(0, +45, 0) sends +Z to the OUTWARD beam direction in +X, so the
         # bore runs from the emitter plane outwards through the wall. Rot about
         # Z then walks it around the ring.
-        bore = (
-            Rot(0, 0, a)
-            * Pos(P.LED_RING_R, 0, P.LED_Z)
-            * Rot(0, P.ILLUM_ANGLE, 0)
-            * Cylinder(P.LED_SEAT_D / 2, length, align=_MIN)
-        )
+        bore = Rot(0, 0, a) * Pos(P.LED_RING_R, 0, P.LED_Z) * Rot(0, P.ILLUM_ANGLE, 0) * one
         tool = bore if tool is None else tool + bore
     return tool
+
+
+def web_angles() -> list[float]:
+    """Azimuth of each web: midway between two LEDs, every 360 / WEB_N."""
+    return [P.WEB_ANGLE0 + 360.0 * i / P.WEB_N for i in range(P.WEB_N)]
 
 
 def _webs() -> Part:
@@ -187,8 +246,7 @@ def _webs() -> Part:
     r_out = P.LED_RING_R + bite
     length = r_out - r_in
     tool = None
-    for i in range(P.WEB_N):
-        a = 360.0 * i / P.WEB_N
+    for a in web_angles():
         web = (
             Rot(0, 0, a)
             * Pos(r_in + length / 2, 0, z0 + P.WEB_H / 2)
