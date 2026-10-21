@@ -519,3 +519,49 @@ and the base and lid are reprinted. The frozen lid height (`LID_ABOVE_BOARD`) is
 gone with the old base. A test now ties every board on the BOM to a solid the
 puck places. The lid's board pegs, now 9.7 mm tall, grow into columns above the
 board's tallest part so they are not needles.
+
+
+## 2026-10-21 — every LED seats on a shoulder, and its light reaches the port
+
+The PR #14 viewer, run on the printed head, showed the head standing in its own
+beams. The bore was cut from the emitter point, so a wedge of outer wall took 53%
+of every LED's axial rays. Web 0 stood in front of LED 0 and took another 26%.
+The 5.8 flange caught on the outer top edge 10.75 along the axis, the tip 3.15
+short of the cavity, so the throw was 28.6 against the 25.5 the optics assume.
+The plate's notches cleared a bare flange by 0.20 a side.
+
+**The LED reaches the designed emitter point; the optics are not re-derived.**
+Each bore now has a counterbore for the flange and a shoulder `LED_SHOULDER_T`
+(7.6) back from the emitter point, so a seated lamp's dome tip is on the
+emitter point (0.00 on all 8) and the throw is the 25.46 the overfill check
+rests on. Re-deriving from where the lamp happened to stop would have kept the
+wall in the beam and a throw set by an edge rather than a face. The shoulder's
+place rests on the nominal T-1 3/4 outline (`LED_LENGTH` 8.6, `LED_FLANGE_T` 1.0,
+both estimates): a lamp 0.5 longer tip-to-flange puts its tip 0.5 past the
+point and moves the overfill margin by 0.18, inside the +0.98 it has.
+
+In front of the body the bore flares at 15° (`head.FLARE_ANGLE`), so nothing of
+the head is round the dome; a plain bore still sent 0.2% of flank light to the
+port edge, 6° sent none with the lamp 0.5 off, and 15° is margin. The webs went
+from three to four, midway between LEDs (`WEB_ANGLE0` 22.5), and a new
+constraint holds `LED_N % WEB_N == 0`. The plate's spigot is re-keyed to them,
+so a plate printed for the three-web head does not fit this one. The lead
+keepout and counterbore radius is `head.LEAD_R` 3.8 (flange, `LED_SEAL_T` 0.6 of
+heat-shrink, 0.3 clearance): the notches clear a sealed back by 0.30 and a bare
+flange by 0.90. Heat-shrink now goes on before the LED goes in.
+
+**The check got more honest.** The old aperture check followed the dome's
+axial rays only as far as the foot of the collection tube, so it could not see
+the port floor and never followed light off the axis. It now follows the axial
+rays to the sample plane and casts every dome-to-port segment, and names what
+each one hits. Bore, flare and webs take
+0.0% of all of it. Two things past them still do, and are left with numbers:
+
+- The collection tube takes 8.7% of the axial rays and 0.5% of the light bound
+  for the collected spot. Clearing it needs `BAFFLE_Z0` above 7.14; tried at
+  7.2 with the plate where it is, the floor's share of the collected spot rose
+  from 5.8% to 9.2%. Not worth it.
+- The port's 2 mm floor takes 18.9% of the axial rays and 5.9% of the light
+  bound for the collected spot. A 45° chamfer on its cavity side, leaving 0.8
+  at the edge, took the spot's share to nothing when tried. Not cut, because the
+  port is ruled; it is Jared's call before the reprint.
