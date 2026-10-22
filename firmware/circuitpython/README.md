@@ -117,3 +117,11 @@ dark reading.
 the sensor reads the room, then a wave rolls violet to deep red, each LED as bright
 as its band. Copy it onto the drive as `code.py`; copy the bridge `code.py` back to
 return to `spectra.capture`.
+
+## The full-on test
+
+`full.py` turns all eight LEDs on at full current and leaves them on. It reads the
+sensor once dark, then lit every five seconds, so the lines also show warm-up drift.
+The 400 nm LED is UV at full current: don't look into the head while it runs. Copy
+it onto the drive as `code.py`; copy the bridge `code.py` back to return to
+`spectra.capture`.
