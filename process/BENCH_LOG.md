@@ -104,3 +104,49 @@ nothing until the head's bores set the aim. The drift says capture needs a warm-
 or a settle longer than the 0.2 s ESTIMATE before repeat reads.
 Next: seat the eight LEDs in the head, rerun `ledtest.py`, then a drift run per
 channel to size the warm-up.
+
+## 2026-10-23: first round in the assembled head (PR #15), over white printer paper
+
+The head is assembled and sitting on plain white paper. `firmware/circuitpython/roundtest.py`
+ran as code.py: one exposure of 50 ms (ATIME 29, ASTEP 599, full scale 18000), 3 reads
+averaged, gain stepped down from 512x only if a band passed 90%. Nothing needed it:
+every row is at 512x.
+
+| row | LED | f1 | f2 | f3 | f4 | f5 | f6 | f7 | f8 | clear |
+|---|---|---|---|---|---|---|---|---|---|---|
+| dark | none | 0 | 0 | 0 | 2 | 4 | 0 | 0 | 0 | 11 |
+| all | 0-7 | 4596 | 10153 | 8525 | 4254 | 2554 | 6676 | 13370 | 1986 | 18000 |
+| ch0 | white C513A | 50 | 236 | 169 | 386 | 591 | **707** | 706 | 347 | 1352 |
+| ch1 | 400 UV | 4110 | **5201** | 3036 | 1311 | 539 | 456 | 333 | 311 | 8405 |
+| ch2 | 460 blue | 148 | **4499** | 2916 | 251 | 117 | 108 | 142 | 225 | 4029 |
+| ch3 | 501 cyan | 60 | 41 | **2104** | 1993 | 164 | 51 | 72 | 62 | 1884 |
+| ch4 | 565 green | 1 | 0 | 0 | 14 | **112** | 35 | 6 | 1 | 74 |
+| ch5 | 590 yellow | 47 | 41 | 81 | 50 | 900 | **2970** | 112 | 69 | 1461 |
+| ch6 | 625 red | 109 | 60 | 112 | 206 | 108 | 2242 | **8076** | 220 | 4154 |
+| ch7 | 660 red | 46 | 75 | 89 | 48 | 69 | 183 | **3936** | 724 | 2163 |
+| dark2 | none | 0 | 0 | 0 | 1 | 4 | 0 | 0 | 0 | 10 |
+
+- **The 10-22 "eight LEDs give nothing" is gone.** All eight light and land in their bands.
+  Yellow alone now reads f6 2970 over a dark of 0; on 10-21 its spill was 175 over 116.
+- **Dark is clean:** at most 4 counts at 512x, the same before and after.
+- **Additive:** the eight single-LED f7 readings sum to 13383; all-on reads 13370.
+- **Green (ch4) is the weak channel, as the GaP part predicts.** Its f5 112 is 1/26 of the
+  yellow's f6, brighter than the 1/40 to 1/60 estimated from datasheets on 10-22. It is
+  still 28x over dark in one 50 ms pass.
+- **The spread is 72x** between the brightest peak (ch6, 8076) and the dimmest (ch4, 112),
+  all at the same gain. One exposure cannot serve every LED, so per-LED exposure is
+  required: roughly 16-32x longer integration for green and about 8x for white.
+- **UV on paper peaks in f2 (445), not f1.** On the bare bench on 10-15 it peaked in f1
+  (7134 vs f2 332). The likely cause is the optical brighteners in printer paper,
+  fluorescing blue under UV (inference). **Paper is a bad white reference;** the ruled
+  ColorChecker patch 19 is the right one.
+- The clear channel saturates (18000) with all eight on. Measurement does not use clear.
+- ch7 again peaks in f7 rather than f8, as on 10-15.
+
+**Board:** auto-reload is off, so a new code.py needs Ctrl-C then Ctrl-D on the USB
+console to take effect. Afterwards the bridge was restored ("sensor and driver found;
+listening"; `find_port` answers), with the LEDs off. full.py is backed up on the drive as
+`full.py`.
+
+**Next:** white reference on ColorChecker patch 19 with per-LED exposure (5 reads each,
+then lift and replace 5 times for repeatability), then a drift run per channel.
