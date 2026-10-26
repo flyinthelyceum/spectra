@@ -380,3 +380,51 @@ except firmware to write. grow-lab's own AS7341 driver is not reused: it is asyn
 bound to grow-lab's models, and grow-lab already depends on this repo, so the
 import would be circular. Spec: `specs/2026-09-22-capture-1a.md`.
 
+
+## 2026-10-04 — the first build starts
+
+**Lane.** Jared, with every part on the shelf: "We have all the parts for this build.
+Can we get to work on it?" That is the reopen for hardware, by the person who set
+the lane, so printing and assembly proceed. `CLAUDE.md` says so now.
+
+**The order is coupon, bench, head, then case.** `process/FIRST_BUILD.md` carries it.
+The bore coupon (`spectra/cad/coupon.py`) prints first because the head's eight
+bores are the one feature that cannot be fixed after printing. The electronics come
+up on the Pi with no head, because a wiring fault is easier to find in the open.
+The puck and dock wait until the head has produced a number.
+
+**Found while planning it: the puck was drawn around the old head.** PRs #9 and #10
+were built on `main`, whose head still has 3 mm bores at `LED_Z` 14; the 2026-09-22
+ruling moved to 5 mm LEDs at 18, and those are the LEDs that arrived. Merged
+together, `puck.check()` failed on the LED leads (10.4 mm³). The case thread traced
+it to the detector plate sitting over every LED back and fixed it in #9 (6f37bf2):
+lead keepouts now start where each bore leaves the head. `main` and #6 still have
+no keepouts, so their plate is a solid disc over the bore mouths; the head and plate
+for the first build are printed from #9.
+
+## 2026-10-06: the first unit reads through the ESP32, not a Pi
+
+Jared, with the ESP32 plugged in and ready to flash: "i don't want to use the pi at
+all. let's bring it all up on the esp32 to start." That reverses the sixth ruling of
+2026-09-22 for this build. The 09-22 reasoning was that the ESP32 "buys nothing at 1a
+except firmware to write"; the puck is drawn around the ESP32 and needs that firmware
+anyway, so writing it first means the bench rig is the instrument rather than a Pi
+stand-in for it.
+
+**How, without throwing away the capture code.** The ESP32 runs CircuitPython, which
+runs the same Adafruit AS7341 and TLC59711 libraries Blinka ran on the Pi.
+`firmware/circuitpython/code.py` is a bridge only: one text command in, one line out,
+over CircuitPython's second USB serial channel. `spectra/capture/serial_hw.py`
+implements `hw.Sensor` and `hw.Lamp` over that link, so `cycle.py`, `session.py` and
+the CLI run unchanged on the computer at the other end of the cable. The measurement
+stays in the tested package; the board holds no maths. `--port auto` is the CLI's
+default; `--port blinka` keeps the Pi path, which costs nothing to keep.
+
+**Why CircuitPython and not ESP-IDF or Arduino.** It runs Adafruit's maintained
+drivers unchanged, it reflashes by copying files to a USB drive with no toolchain,
+and it is Python the rest of the repo reads. Speed is irrelevant: the AS7341
+integrates for hundreds of milliseconds per read.
+
+**Pins** are the ESP32-S3's own defaults (SDA 8, SCL 9, MOSI 11, SCK 12, from
+Espressif's Arduino variant). CircuitPython's DevKitC-1 boards name no I2C or SPI pins,
+so the firmware chooses them; these avoid the strapping, USB and octal PSRAM pins.

@@ -43,10 +43,9 @@ things this repo would otherwise re-derive badly.
 - **The ROADMAP row for saturated organics has no pass threshold on purpose.** It
   is not a test the build can fail. It measures what the cheap detector costs, so a
   $200 purchase is made on evidence. Do not add a threshold to it.
-- **Lane: HOLD, with head CAD explicitly released.** See `docs/DECISIONS.md`.
-  Model work, documentation and the CAD spine proceed — Jared released the head CAD
-  by asking for it on 2026-09-17, overriding his own lane. Hardware and orders still
-  wait for the reopen trigger. Nothing has been printed or bought.
+- **Lane: open for the first build (2026-10-04).** Jared reported every part in
+  hand and asked to build; the order is `process/FIRST_BUILD.md`. Before that the
+  lane was HOLD with head CAD released; `docs/DECISIONS.md` has the history.
 
 ## Conventions
 
