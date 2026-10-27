@@ -12,8 +12,9 @@ raises and `assembly.py` leaves the plate out; the head, the tube, the trap and
 the tiles all still build and still render. A missing caliper reading costs one
 part, not the build.
 
-As of 2026-09-17 the board has been measured except for `PCB_W`. That is one
-reading with a caliper and one `python -m components measure` away.
+As of 2026-09-17 the board is fully measured, `PCB_W` included, and this part
+builds. The gate stays: a future board revision that loses a reading costs one
+part, not the build.
 """
 
 from __future__ import annotations

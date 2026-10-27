@@ -277,3 +277,106 @@ the repo, and `km.py`'s drawdown solve is the answer to it.
 time belongs in the model as a series. Both fading (Hiler) and coating chemistry
 (Okumura's UV stabiliser shifting 360–450nm) say a reading is a point in time, not
 a permanent fact. The `date` field exists; nothing consumes it as a series.
+
+## 2026-09-22 — three rulings from Jared, and one stale claim retired
+
+**The first run measures matte black PLA prints, not paint-outs.** Jared: "skip
+paint out on the first run. we can get good data from matte black pla prints." A
+printed chip is flat, opaque, pressable and light-sealed at the port, which is the
+whole envelope the head asks for, and it exists the day the head does. So Stage 1a's
+repeatability and ladder rows run on printed chips and Color-aid, and the first
+`paint` reading moves to 1c+. Consequence: **the cure interval no longer gates the
+head print.** It still has to be fixed before the first paint-out, for the same
+reason as before, and it stays in the known holes as deferred rather than open.
+
+**The measured Color-aid table is public.** Jared: "public whenever possible. I like
+the idea of community work even if I never do it." The 314-row table goes in this
+repo when it exists. Color-aid's booklet asserts rights over the collection and
+objects to cross-referencing; his measurements are facts about objects he owns, and
+the table cites the collection rather than reproducing it. Decided before the table
+exists, which is when it was cheapest.
+
+**The LED part is being specified from datasheets.** `LED_HALF_ANGLE = 15` in
+`spectra/cad/params.py` is still an ESTIMATE about a part not yet chosen. A
+datasheet sweep across the seven wavelengths and white is in progress; the number
+hardens to a datasheet figure, and the 8/15/30 sweep in the viewer is re-run
+against it, before anything is printed.
+
+**`as7341_breakout.PCB_W` was calipered on 2026-09-17** (`PCB_W = 17.78  # CALIPER
+2026-09-17 JR` in `components/as7341_breakout.py`). `plate.missing()` returns an
+empty list, `detector_plate()` builds, and `tests/test_cad.py:134` skips itself with
+"board is fully measured; nothing to gate." Four documents in this repo, the memory
+file and the Todoist task all still said it was the one missing number. They were
+quoting each other. Retired in this commit; the source of truth for measurement
+state is the components repo and nothing here.
+
+### A fourth ruling, later the same day: no PTFE tile for Stage 1a
+
+Jared, on the order list: the sintered PTFE tile "seems exorbitantly expensive.
+what is it and how critical is it?" The answer is that it is not critical at 1a.
+Every 1a number is a ratio, sample over white, and a ratio does not care what the
+white's absolute reflectance is, only that it holds still and is roughly flat
+across the band. The ColorChecker white patch is matte, has published
+per-wavelength reflectance near 90%, and is already on order. So the tile moves
+from 1a to 1d, where absolute reflectance and agreement with another instrument
+start to matter. Ruled "do it" 2026-09-22.
+
+Two things worth keeping from the same exchange. A print shop cannot lend a white
+reference; the one in a handheld spectrophotometer is a ceramic tile built into
+the instrument. The better ask of a print shop is ten minutes with that
+instrument on our chips, which is ground truth for the whole head. And the BOM
+line "the one part not worth improvising" was wrong for this stage; it was true of
+absolute work and was written before the stages were separated.
+
+Ordered 2026-09-22: ColorChecker Classic, Adafruit 1455 driver, matte black PLA.
+
+### Fifth ruling, same day: the LED set, and the geometry that follows from it
+
+Jared: "I don't have a pure white led. let's rule on everything and I'll order
+all LEDs now. Is 5.3 the way to go?"
+
+**Bore.** Yes. Every part in the set is a 5 mm lamp, so `LED_SEAT_D` becomes one
+knob at 5.3, CHOSEN. FDM holes print small, so a coupon at 5.2 to 5.6 is printed
+first and the knob set to the bore that holds by friction. The tube, plate and
+trap are unchanged; the body grows from 44.5 to 54.6 mm across.
+
+**Half angle.** `LED_HALF_ANGLE` drops from the 15 degree estimate to 10, CHOSEN
+from datasheets: four of the Kingbright parts list a 20 degree viewing angle. The
+narrowest LED is the one that can underfill the port, so it is the number the
+geometry is checked against; the wider ones only make that constraint easier.
+
+**Height.** At 10 degrees `LED_Z` 14 underfills the port by a millimetre. 18 is
+the only value that passes: 16 still underfills, 20 puts the LED seats through
+the detector plate. Margins at 18 are +0.98 mm on overfill and +1.76 mm on plate
+clearance, both real but thin, and the viewer should be re-run at 8/10/12 degrees
+before the print in case a batch runs narrower than its datasheet.
+
+**The set.** Two changes to the seven colours. The 530 (WP7113ZGCK, real peak
+515) sat 14 nm from the 505 (real peak 501) and left a 75 nm hole between 515 and
+590; it is replaced by the WP7113SGC at 565, which brings the largest gap in the
+ring down to 64 nm (501 to 565). The 660 was a LEDSupply part with no datasheet
+and a 50 degree beam; it is replaced by the Kingbright WP7113SRD/J4, 660 nm peak,
+30 degree beam, from a Kingbright datasheet. (First written as the /D suffix,
+which Jared found obsolete at Digi-Key while ordering; the /J4 is the current
+sort of the same lamp. His proposed substitute, Würth 151051RS11000, is a 650 nm
+peak with a 30 nm bandwidth and 30 mcd, too close to the 630 and too dim, so no.) The 590 and 625 move
+from their 3 mm packages to the 5 mm siblings (WP7113SYCK/J3, WP7113SEC/J3). Real
+peaks around the ring: 400, 460, 501, 565, 590, 630, 660, plus the white. This
+is a tiling of the band, not an alignment to the AS7341 channels; with narrow
+sources the LED is the resolution and the channels are the cross-check.
+
+**Stage 1a.** The white (Cree C513A) is on the same order, so 1a is no longer
+waiting on the bins. The PTFE tile holder in `spectra/cad/trap.py` stays in the
+model and prints at 1d with the tile.
+
+### Sixth ruling, same day: Stage 1a reads through a Pi, not the ESP32
+
+The BOM had an ESP32 in hand and no firmware. Nothing in the repo read the sensor
+at all. The shortest path to a number is a spare Pi (Jared: "there is a spare
+pi") running the Adafruit CircuitPython libraries for the AS7341 and the TLC59711
+under Blinka, so the capture code is ordinary Python in this package, tested on
+the Mac against fakes and run unchanged on the Pi. The ESP32 buys nothing at 1a
+except firmware to write. grow-lab's own AS7341 driver is not reused: it is async,
+bound to grow-lab's models, and grow-lab already depends on this repo, so the
+import would be circular. Spec: `specs/2026-09-22-capture-1a.md`.
+
