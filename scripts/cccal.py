@@ -87,7 +87,6 @@ SETTLE_S = 0.3
 WARMUP_S = 120
 N_WHITE, N_PATCH, PLACEMENTS = 5, 3, 5
 RESEAT_TOL = 0.02   # two reads of one patch agree if every LED's peak is within this
-GATE_TOL = 0.015    # the first two white placements must agree this closely
 GATE_TRIES = 3
 PATCH_TRIES = 3     # placements before a patch that fails its check is recorded anyway
 ENTER_GUARD_S = 1.5
@@ -97,9 +96,11 @@ ap.add_argument("--layout", choices=sorted(LAYOUTS), default="classic")
 ap.add_argument("--adapter", default="none", help="what is fitted to the puck, e.g. collar-v1")
 ap.add_argument("--standoff", type=float, default=1.2, help="port face above the patch, mm (the lip)")
 ap.add_argument("--port", default="auto")
+ap.add_argument("--gate", type=float, default=1.5, help="reseat gate on white, percent (recorded in the output)")
 ap.add_argument("--dark-each", action="store_true", help="LEDs-off read after every placement, room lights as they are")
 args = ap.parse_args()
 where = LAYOUTS[args.layout]
+GATE_TOL = args.gate / 100  # the first two white placements must agree this closely
 
 try:
     S, L = s.connect(args.port)
@@ -301,7 +302,7 @@ def mean_rel(reads, white):
 out = {
     "kind": "cccal", "version": 2, "started": datetime.now().isoformat(timespec="seconds"),
     "target": args.layout, "adapter": args.adapter, "standoff_mm": args.standoff,
-    "dark_each": args.dark_each,
+    "dark_each": args.dark_each, "gate_pct": args.gate,
     "atime": ATIME, "leds": LEDS, "patches": PATCHES, "white_ref_patch": 19,
     "exposure": {}, "dark_start": {}, "white_placements": [], "patch_reads": [],
     "white_end": None, "dark_end": {}, "notes": [],
