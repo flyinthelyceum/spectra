@@ -95,6 +95,19 @@ class TestSolids:
         for part in (trap.light_trap(), trap.tile_holder(), trap.ptfe_tile()):
             assert len(part.solids()) == 1
 
+    def test_calibration_parts_are_each_a_single_solid(self):
+        b123d("build123d")
+        from spectra.cad import calibrate
+
+        for part in calibrate.parts().values():
+            assert len(part.solids()) == 1
+
+    def test_collar_grips_the_base_and_clears_the_card(self):
+        b123d("build123d")
+        from spectra.cad import calibrate
+
+        assert calibrate.check() == []
+
     def test_head_port_face_is_the_datum(self):
         b123d("build123d")
         from spectra.cad import head
