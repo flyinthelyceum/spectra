@@ -196,13 +196,40 @@ def ask(msg):
         print("    (too quick; set the puck down, then Enter) ", end="", flush=True)
 
 
+def one_pass():
+    """One read of every LED in turn, each lit only for its own read."""
+    rows = {}
+    for ch, c in EXP.items():
+        cfg(c)
+        L.set(ch, 1.0)
+        time.sleep(SETTLE_S)
+        rows[ch] = S.read()
+        L.off()
+    return rows
+
+
 def placement(label, patch, n):
+    """n round-robin passes over the LEDs, after one pass thrown away.
+
+    LED output falls as the junction heats. Holding one LED on for n reads, then
+    sitting dark while the operator reseats, read 1.5-4% apart on an untouched
+    white (2026-11-10); round-robin passes on the same white held within 0.3% for
+    12 minutes. The discarded pass puts every placement at the same temperature
+    however long the pause before it was."""
     t0 = time.time()
     rec = {"label": label, "patch": patch, "t": t0, "leds": {}}
-    print("    reading %s: LED" % label, end="", flush=True)  # a placement runs ~1-2 min; show it is alive
-    for ch, c in EXP.items():
-        rec["leds"][ch] = lit(ch, c, n)
-        print(" %d" % ch, end="", flush=True)
+    print("    reading %s: warm" % label, end="", flush=True)  # a placement runs ~1-2 min; show it is alive
+    one_pass()
+    passes = []
+    for i in range(n):
+        passes.append(one_pass())
+        print(" %d" % (i + 1), end="", flush=True)
+    for ch in EXP:
+        rec["leds"][ch] = {}
+        for k in K:
+            v = [getattr(p[ch], k) for p in passes]
+            rec["leds"][ch][k] = statistics.fmean(v)
+            rec["leds"][ch][k + "_sd"] = statistics.stdev(v) if n > 1 else 0.0
     if args.dark_each:
         rec["dark"] = {ch: dark(c, 1) for ch, c in EXP.items()}
         print(" dark", end="", flush=True)
