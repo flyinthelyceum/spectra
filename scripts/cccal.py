@@ -199,11 +199,15 @@ def ask(msg):
 def placement(label, patch, n):
     t0 = time.time()
     rec = {"label": label, "patch": patch, "t": t0, "leds": {}}
+    print("    reading %s: LED" % label, end="", flush=True)  # a placement runs ~1-2 min; show it is alive
     for ch, c in EXP.items():
         rec["leds"][ch] = lit(ch, c, n)
+        print(" %d" % ch, end="", flush=True)
     if args.dark_each:
         rec["dark"] = {ch: dark(c, 1) for ch, c in EXP.items()}
+        print(" dark", end="", flush=True)
     rec["dur_s"] = round(time.time() - t0, 1)
+    print(" (%.0f s)" % rec["dur_s"])
     return rec
 
 
