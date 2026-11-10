@@ -319,6 +319,11 @@ try:
         second = placement("white-2", 19, N_WHITE)
         gap = worst_gap(first, second)
         out["notes"].append("reseat gate try %d: %.2f%%" % (attempt + 1, 100 * gap))
+        out.setdefault("gate_reads", []).extend([first, second])  # kept even when the gate fails
+        save()
+        # Signed change per LED: tilt shows as LEDs on opposite sides moving opposite ways.
+        print("    per LED: " + "  ".join("%s:%+.1f%%" % (ch, 100 * (peak(second["leds"][ch]) / max(peak(first["leds"][ch]), 1e-9) - 1))
+                                        for ch in first["leds"]))
         if gap <= GATE_TOL:
             print("    agree within %.2f%%" % (100 * gap))
             break
